@@ -34,7 +34,7 @@ Repeated internal hosts can be silenced with `--ignore-host`.
 
 Its output is **candidates, not findings**. A dependency is not a processor until personal data reaches it; a host in a diff may never be called at runtime; and an internal service on a third-party domain is neither. Every line it prints is an input to the judgment below, which confirms it, dismisses it, or maps it to a document.
 
-So it **always exits 0** on a successful scan, signals or not — a non-zero exit would read as a verdict it isn't entitled to. Exit 2 means it couldn't scan at all.
+So it **always exits 0** on a successful scan, signals or not — RULES.md's exit-code rule for a signal-producing script, since a non-zero exit is a verdict and a detector feeding a judgment layer isn't entitled to one. Exit 2 means it couldn't scan at all.
 
 And a clean scan is **not a clean check**. Features add personal data, change retention, extend deletion paths and move data between regions without adding a single dependency or host. When the scan finds nothing, the judgment pass below is the entire check — run it exactly as thoroughly as when the scan lights up.
 

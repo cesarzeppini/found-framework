@@ -33,11 +33,13 @@ axe reliably catches roughly a third of real accessibility problems — the mech
 
 ## Severity and blocking
 
+Severity thresholds and the retry limit come from RULES.md — axe's scale maps onto them directly, so this check adds only what's specific to it:
+
 | Severity | Handling |
 |---|---|
-| critical, serious | **Blocking.** Fix, re-run, repeat within the run's bounded attempts. |
-| moderate, minor | Not blocking. Fix when the fix is unambiguous; otherwise park for the report. |
-| judgment findings | Judge on user impact, not on axe's absent verdict. A keyboard trap is critical however it was found. |
+| critical, serious | Blocking, per RULES.md. |
+| moderate, minor | Park, per RULES.md. Fix in place when the fix is unambiguous. |
+| judgment findings | Rate on user impact, not on axe's absent verdict. A keyboard trap is critical however it was found. |
 
 Blocking never means waiting for a human. If a critical finding survives its fix attempts, the run **ends** and the finding goes to the final report with what was tried.
 

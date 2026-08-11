@@ -33,7 +33,7 @@ If a slice is marked test-exempt, say so out loud in its result line. An exempti
 
 ### When a slice won't pass
 
-Fix it. Blocking never means waiting for a human: attempt the fix, re-run, and repeat up to a bounded number of attempts — three is the working default unless the task package says otherwise.
+Fix it. Blocking never means waiting for a human: attempt the fix, re-run, and repeat up to the bounded retry limit in RULES.md, unless the task package sets a different one.
 
 If it still fails, **end the run** and hand the report what failed, at which slice, what was attempted, and the last error. Do not proceed to the next slice on a red suite, and do not sit waiting for input.
 

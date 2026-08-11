@@ -37,7 +37,7 @@ security-audit and compliance read the same surface for different consequences, 
 
 ## Blocking, and what it means
 
-A blocking check makes the run fix it — hand the finding back for a bounded number of fix attempts, then re-run the check. It never means waiting for a human.
+A blocking check makes the run fix it — hand the finding back for the retry limit in RULES.md, then re-run the check. It never means waiting for a human. Severity thresholds are RULES.md's too; a check states only where it departs from them.
 
 If a blocking finding survives its attempts, **end the run** and put it in the final report with what was tried. Advisory findings never end a run; they accumulate for the gate.
 

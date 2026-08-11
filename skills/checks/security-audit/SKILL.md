@@ -43,13 +43,17 @@ The surface is a starting point, not a boundary. A diff that touches something t
 
 ## Severity and blocking
 
+Thresholds and the retry limit come from RULES.md. This check keeps security's conventional three-level scale, which maps onto them as follows:
+
 | Severity | Meaning | Handling |
 |---|---|---|
-| high | Exploitable now, or exposes data | **Blocking.** Fix, re-run, within bounded attempts. Survives them → the run ends into the report. |
-| medium | Real weakness needing a precondition | Fix if unambiguous, otherwise park with the fix proposed. |
-| low | Hardening, defence in depth | Park for the report. Never blocks. |
+| high | Exploitable now, or exposes data | The blocking tier, per RULES.md. Survives its attempts → the run ends into the report. |
+| medium | Real weakness needing a precondition | Park, per RULES.md. Fix in place if unambiguous. |
+| low | Hardening, defence in depth | Park. Never blocks. |
 
-Rate on what the finding lets someone actually do in this system, using COMPANY.md for context. A theoretical issue in an admin-only path used by two people is not high severity, and inflating it trains the gate to skim.
+Report findings in this vocabulary rather than translating them, so a finding stays greppable against the tools and advisories that use it.
+
+Rate on what the finding lets someone actually do in this system — RULES.md says severity is rated against COMPANY.md, and this is where that bites hardest. A theoretical issue in an admin-only path used by two people is not high severity.
 
 **Park, don't guess** when the fix changes intended behaviour — tightening a permission that might be deliberately open, or restricting a field something else consumes. Name the exact change proposed and what might depend on it.
 

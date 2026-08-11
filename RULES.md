@@ -6,7 +6,7 @@ Operating rules and standing constraints. The shared source — CLAUDE.md and AG
 
 - **Two human stops, no more.** Spec approval at the start, final gate at the end. Everything between runs unattended.
 - **Park, don't ask.** Anything ambiguous mid-run: make the reversible choice, log it, surface it in the final report. Irreversible or genuinely blocked items land in the report as questions.
-- **Blocking never means waiting for a human.** A blocking gate makes the run fix it; if it can't after a bounded number of attempts, the run ends early into the final report. Mid-run, the pipeline progresses or terminates — it never sits waiting.
+- **Blocking never means waiting for a human.** A blocking gate makes the run fix it; if it can't after a bounded number of attempts, the run ends early into the final report. Mid-run, the pipeline progresses or terminates — it never sits waiting. Thresholds below.
 - **No code in specs.** SPEC.md carries intent, behaviour, constraints — no snippets, no library names, no implementation suggestions.
 - **Minimum-viable rule.** Build the simplest thing that delivers the value in this slice. Justification lives in the project's COMPANY.md. Exceptions are only the overrides listed in SPEC.md.
 - **Cut by vertical slice, not by layer.** A slice is valid only if Plan can state how it would be tested.
@@ -19,6 +19,22 @@ Operating rules and standing constraints. The shared source — CLAUDE.md and AG
 - **Legal text is drafted, never finalised.** Compliance findings become per-clause amendment drafts in out/legal/, written against the jurisdiction in STACK.md, marked as drafts for a lawyer, and gated individually — approving a run never approves a legal change. Published legal files are never written directly. Storing and versioning legal records is a product feature with its own spec, not something a feature run builds on the way past.
 - **Context belongs to projects.** The framework repo has no context/ of its own.
 - **Report decisions, not activity.** See below. Applies to skill output, subagent handbacks and the final report alike.
+
+## Severity and retries
+
+Standing defaults, so they don't get reinvented per skill. A skill states only where it *departs* from these, and says why.
+
+**Blocking severity.** Critical and serious findings block. Moderate and minor park to the report.
+
+Checks that inherit a different scale from their tooling map onto that line rather than restating it — a security audit's `high` is the blocking tier, its `medium` and `low` park. Keep the tool's own vocabulary in the report, so a finding stays greppable against the tool that produced it.
+
+**Severity is rated against COMPANY.md,** not in the abstract. What's critical for a product with payments and 40,000 users isn't critical for an internal tool with four. Inflating severity trains the gate to skim, which costs more than the finding was worth.
+
+**Bounded retries: three fix attempts** on a blocking finding. After that the run ends into the report with the finding named, what was attempted, and the last error. It never loops and never waits.
+
+**Exit codes.** Scripts exit **1** for real findings and **2** for a missing harness — a Stage 0 job, not a failure of the work. A run must be able to tell setup failure from a genuine hit.
+
+A script that produces signals rather than findings exits **0** either way, and says so: a non-zero exit is a verdict, and a detector that feeds a judgment layer isn't entitled to one.
 
 ## Reporting
 

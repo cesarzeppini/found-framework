@@ -29,7 +29,7 @@ The denylist is not maintained in this skill. It comes from the **banned words t
 
 ## Blocking
 
-Denylist hits and unsupported claims are blocking — fix and re-run, within the run's bounded attempts.
+Denylist hits and unsupported claims are blocking — fix and re-run, within the retry limit in RULES.md.
 
 Register and pattern findings are blocking too, but the fix is a rewrite rather than a substitution. Rewrite once, re-check, and if it still doesn't land, **park it with both versions** so the gate can choose. Copy is the cheapest thing in the pipeline to change at the gate and the most expensive to get wrong after publishing.
 

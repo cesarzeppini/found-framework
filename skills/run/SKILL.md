@@ -35,7 +35,7 @@ Between them the run is unattended. That is the whole point: the human trades fi
 
 **Park, don't ask.** Ambiguous mid-run: make the reversible choice, log it with the alternative named, keep going. Irreversible or genuinely blocked items go to the report as questions.
 
-**Blocking never waits.** A failed test, a security finding, an a11y hit — the run fixes it. Bounded attempts, then the run *ends early* and the report says where and why. Mid-run the pipeline progresses or terminates. It never sits waiting for a human who isn't there.
+**Blocking never waits.** A failed test, a security finding, an a11y hit — the run fixes it. RULES.md sets the retry limit and the blocking severity threshold for every stage; the run enforces them rather than each stage choosing. After the attempts, the run *ends early* and the report says where and why. Mid-run the pipeline progresses or terminates. It never sits waiting for a human who isn't there.
 
 **The effort ceiling is the only legitimate mid-run halt.** If the slice count blows past the spec's ceiling, the spec was wrong; continuing burns effort on a bad foundation. Stop, report, wait.
 
@@ -47,7 +47,7 @@ Between them the run is unattended. That is the whole point: the human trades fi
 
 **Build** — standard tier. Stage 0 prep, then slices in order, each gated on implement → test → full suite. A failing slice blocks the next; bounded fix attempts, then terminate into the report.
 
-**Review** — reasoning tier, in the other harness where the MCP link exists, otherwise same harness with the fallback noted. User-story test, screenshots, then the four checks in parallel. Blocking findings go back to build for bounded attempts.
+**Review** — reasoning tier, in the other harness where the MCP link exists, otherwise same harness with the fallback noted. User-story test, screenshots, then the five checks in parallel. Blocking findings go back to build for the retry limit.
 
 **Ship** — light tier for copy. Tier × channel fan-out, all channels in parallel, everything into `out/`, unpublished.
 
