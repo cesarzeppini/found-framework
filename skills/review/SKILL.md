@@ -25,11 +25,15 @@ If review finds something broken, it reports it — the fix goes back through bu
 
 **`checks/security-audit`** — once, reading the spec's security surface plus the full diff. Blocking; unresolvable high-severity findings end the run into the final report.
 
+**`checks/compliance`** — once, alongside the security audit, reading the spec's compliance surface plus the diff. Reports which legal documents this feature affects and why. **Advisory as a check; its consequences land in Ship**, which drafts the amendments into `out/legal/`. It never blocks — the question it raises is answered by a human with legal responsibility, and a blocking check would sit waiting.
+
 **`checks/design-quality`** — anti-pattern pass. Advisory. Output lands next to the screenshots so both get reviewed together.
 
 **`checks/design-system-guard`** — across the whole diff, catching drift the per-slice runs missed. Parked cases from the slices resurface here, either resolved by a later slice or still listed.
 
-The four checks read the same diff independently, so **they can run in parallel** — one subagent each. A harness without subagents runs them in order and produces the same output.
+The five checks read the same diff independently, so **they can run in parallel** — one subagent each. A harness without subagents runs them in order and produces the same output.
+
+security-audit and compliance read the same surface for different consequences, so a finding in one often implies a finding in the other — a new third-party processor is both a key to protect and a sub-processor to disclose. Run them independently anyway; correlating them is the report's job, not theirs.
 
 ## Blocking, and what it means
 
@@ -54,6 +58,7 @@ Hand back one block for the final report:
 - acceptance criteria, each met or not, with the failing ones named
 - screenshot paths, per route and viewport
 - findings per check, severity marked, blocking or advisory
+- affected legal documents from `checks/compliance`, passed to Ship
 - parked decisions carried from the slices, resolved or still open
 - any skill weakness noticed, written to `out/skill-proposals/` rather than applied
 
