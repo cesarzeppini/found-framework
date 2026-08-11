@@ -18,3 +18,32 @@ Operating rules and standing constraints. The shared source — CLAUDE.md and AG
 - **Skill changes pass the gate.** Agents propose skill diffs and LESSONS.md observations into out/skill-proposals/; nothing is applied or recorded unreviewed.
 - **Legal text is drafted, never finalised.** Compliance findings become per-clause amendment drafts in out/legal/, written against the jurisdiction in STACK.md, marked as drafts for a lawyer, and gated individually — approving a run never approves a legal change. Published legal files are never written directly. Storing and versioning legal records is a product feature with its own spec, not something a feature run builds on the way past.
 - **Context belongs to projects.** The framework repo has no context/ of its own.
+- **Report decisions, not activity.** See below. Applies to skill output, subagent handbacks and the final report alike.
+
+## Reporting
+
+**Agents report decisions, not activity.** A run that narrates every file it touches buries the two lines that actually needed a human.
+
+**Don't report:** what you're about to do, each file created, each command run, each verification that passed, restatements of what the doc already says.
+
+**Do report, briefly:**
+
+- judgment calls made where the spec or doc was silent, and what was assumed
+- anything invented that wasn't asked for
+- anything in the existing setup that was changed, and why
+- contradictions found between instructions
+- where you'd argue with the instruction you were given
+
+Default to a few lines. When something needs a paragraph, write the paragraph — **brevity is not a reason to hide a real problem.**
+
+This applies to skill output, subagent handbacks, and the final report alike.
+
+### One result per check, not one per assertion
+
+"Each verification that passed" means the individual assertions, not the check itself. A check still reports its own outcome once, including when that outcome is clean — `a11y: clean (7 routes, 2 viewports)` is a decision-grade line, because without it a check that never ran is indistinguishable from one that found nothing.
+
+The same logic runs through the manifest's list of what was *not* produced and the spec's `none` compliance surface. **An explicitly empty result is a reported decision. A silent one is missing information.**
+
+### Ordering
+
+Lead with what needs a human: blocked items and questions, then decisions and assumptions, then findings, then everything produced. A reader who stops after the first section should have seen the things that change what they do next.
