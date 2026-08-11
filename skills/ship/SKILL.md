@@ -93,6 +93,15 @@ Drafting an amendment is Ship's job. **Storing, versioning and publishing it is 
 
 Hold that line, because the alternative is the first run that touches a privacy policy trying to build a legal CMS as part of shipping an unrelated feature. If a project needs versioned legal records, that is its own spec and its own run. Approved amendments from `out/legal/` then feed it as the next pending version, rather than a file someone pastes into a CMS by hand.
 
+## What Ship hands back
+
+**Report decisions, not activity** (RULES.md). The manifest already lists what was produced; repeating it as prose is the activity this rule exists to cut. Hand back only:
+
+- claims trimmed because the success metric didn't support them, and what the copy says instead
+- channels that produced nothing, and whether that was the tier, the switch in DISTRIBUTION.md, or a failure
+- anything BRAND.md or CHANNELS.md didn't cover, and what was assumed in its place
+- where you'd argue with the spec — a feature whose collateral is hard to write is usually a feature whose intent was thin, and Ship is the last stage positioned to notice
+
 ## The final report
 
 Ship's last act writes `out/report.html`: one self-contained file, generated through visualize so it's branded.
