@@ -48,7 +48,9 @@ Run this skill's own `skills/checks/design-system-guard/scripts/ds-lint.sh` on t
 
 ## Report
 
-End every UI slice with this block, even when nothing was found (`Design system check: clean`).
+**Report decisions, not activity** (RULES.md): what was fixed and what was parked, not the files scanned or the rules evaluated. The fixed list is decisions — each one is a change someone might disagree with — so it stays; the scan itself is activity and doesn't.
+
+End every UI slice with this block, even when nothing was found (`Design system check: clean`). One result for the check, not one per file: a clean line is a reported decision, and its absence is indistinguishable from the check never running.
 
 ```text
 Design system check

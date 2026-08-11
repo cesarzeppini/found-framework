@@ -37,6 +37,8 @@ Register and pattern findings are blocking too, but the fix is a rewrite rather 
 
 ## Report
 
+**Report decisions, not activity** (RULES.md): what you changed and what you couldn't settle, not the files you read. One result for the check, including when it's clean.
+
 ```text
 voice-guard
 Fixed (2)

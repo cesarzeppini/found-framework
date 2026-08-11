@@ -72,6 +72,8 @@ So findings flow to Ship, which drafts amendments into `out/legal/`, and the hum
 
 ## Report
 
+**Report decisions, not activity** (RULES.md): which documents are affected and why, not the diff you read. The explicit "not affected" list is required rather than optional — an empty result stated is a reported decision, an empty result omitted is missing information.
+
 ```text
 compliance
 Jurisdiction: <from STACK.md>   Documents: <paths from STACK.md>

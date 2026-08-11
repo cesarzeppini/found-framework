@@ -57,6 +57,8 @@ Rate on what the finding lets someone actually do in this system, using COMPANY.
 
 ## Report
 
+**Report decisions, not activity** (RULES.md): findings and what you changed, not the surface you walked through to get there. One result for the check, including when it's clean — on a stack where most features find nothing, a silent audit and an absent one look identical.
+
 ```text
 security-audit
 Blocking (1)

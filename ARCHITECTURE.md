@@ -397,6 +397,17 @@ Not stages. Invoked by stages.
 
 Each check follows the same shape: a deterministic script for what machines catch, written judgment for what they can't, an explicit "park, don't guess" rule, and a fixed report format.
 
+Exceptions, deliberate: `security-audit`, `compliance` and `design-quality` are judgment-only, with no script. A detector for these would produce confident false negatives on exactly the cases they exist to catch — the free-text field that collects personal data without being named for it. The one narrow exception is compliance's dependency signal: new packages and new third-party network calls are reliably detectable and map straight to "new processor" and "new tracker," so a script flags those and feeds the judgment layer. It never decides.
+
+### Severity and retry thresholds
+
+Standing defaults, so they don't get reinvented per skill:
+
+- **Blocking severity:** critical and serious findings block; moderate and minor park to the report.
+- **Severity is rated against COMPANY.md**, not in the abstract. What's critical for a product with payments and 40,000 users isn't critical for an internal tool with four.
+- **Bounded retries:** three fix attempts on a blocking finding. After that the run ends into the report with the finding named — it never loops and never waits.
+- **Exit codes:** scripts exit 1 for real findings and 2 for a missing harness (which is a Stage 0 job, not a failure of the work). A run must be able to tell setup failure from a genuine hit.
+
 ### design-system-guard
 
 Already written and updated (v2). Enforces that every interface uses only approved components, only approved tokens and variants, no hardcoded values, no components invented on the spot, nothing pulled from Tailwind's default palette or shadcn directly. Registry path comes from STACK.md, token allowlist derives from tokens.css, runs per UI slice plus full-diff at review, parks instead of halting.

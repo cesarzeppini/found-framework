@@ -45,6 +45,8 @@ Blocking never means waiting for a human. If a critical finding survives its fix
 
 ## Report
 
+**Report decisions, not activity** (RULES.md): findings, not the routes you walked or the assertions axe ran. One result for the check — including when it's clean, so a check that never ran can't be mistaken for one that found nothing.
+
 ```text
 a11y check
 Blocking (1)

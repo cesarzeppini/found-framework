@@ -33,6 +33,8 @@ Output lands next to the screenshots so the human reviews both together at the g
 
 ## How to report
 
+**Report decisions, not activity** (RULES.md): findings, not the screens you looked at or the passes you made. An advisory check is the easiest place in the pipeline to pad a report with observations nobody can act on, and padding here costs more than elsewhere — this output sits next to the screenshots, where a skimming gate misses the blocking findings too.
+
 Advisory means **specific**, not soft. A finding a human can't act on in one read is noise, and noise next to screenshots is how a gate starts skimming.
 
 Each finding: the route, the viewport, what's wrong, and what would fix it. Rank by how much the fix improves the screen, so the gate can stop reading partway down and still have seen the ones that matter.
