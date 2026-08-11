@@ -403,7 +403,9 @@ Nothing in `skills/` or `tasks.md` names a model. Tasks carry a tier:
 | standard | build |
 | light | copy |
 
-Each harness maps tiers to its own models in **one place** — a short table in CLAUDE.md and the same table in AGENTS.md. Switching providers is a one-file edit. If a harness offers only one model, every tier resolves to it and the pipeline still runs.
+Each harness maps tiers to its own models in **one place** — a short table in CLAUDE.md, and the same table in AGENTS.md. Switching providers is a one-file edit.
+
+**Nobody fills the table by hand.** The first run in a harness detects which models that harness currently offers, maps reasoning / standard / light to the best fits, and writes the table with a one-line reason per row. Re-run the detection when a provider changes its lineup. A harness writes only its own table — guessing another's model names produces a table that looks authoritative and is wrong, so the unfilled one carries a note saying the first run there fills it. If a harness offers only one model, every tier resolves to it and the pipeline still runs.
 
 ### Build subagents are spawned at runtime
 
