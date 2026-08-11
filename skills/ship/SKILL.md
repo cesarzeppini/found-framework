@@ -56,10 +56,42 @@ out/
   manifest.md          what was generated and why, what was skipped and why
   report.html          the final report
   screens/             screenshots from review
+  legal/               amendment drafts — gated separately, see below
   skill-proposals/     proposed skill changes and LESSONS.md observations
 ```
 
 `manifest.md` lists what was generated and why — including the channels that produced nothing, so a silent omission is distinguishable from a failure.
+
+## Legal and compliance
+
+When `checks/compliance` reports an affected document, draft the amendments: Privacy Policy, Terms of Service, Cookie Policy, GDPR/DPA records. Read the live text from the paths in `context/STACK.md`, and write against the jurisdiction it names.
+
+Four rules make this safe rather than reckless.
+
+**Diffs against the live text, never rewrites.** Amend the clauses that changed and leave the rest untouched. Each amendment names the triggering change beside it, so the reason is reviewable clause by clause. A regenerated policy is unreviewable — nobody can tell which of two hundred lines moved, and the wording that changed silently is exactly the one that mattered.
+
+**Drafts only.** Legal text is not a changelog. Where jurisdictional exposure is real, mark the output explicitly as a draft for a lawyer, not a finished document. Automating legal copy without that marking is automating liability.
+
+**A separate legal changelog.** Users need notice of material changes, and it follows different rules from a product changelog: effective date, what changed in plain language, and whether continued use constitutes acceptance. Write it as `out/legal/legal-changelog.md` — never fold it into `out/changelog.md`, whose register and audience are entirely different.
+
+**Everything lands in `out/legal/` and stays there.** Gated harder than the rest: **approving the run does not approve the legal changes.** Mark each one individually so the gate has to say yes to each, and never write into the project's published legal files directly.
+
+```text
+out/legal/
+  privacy-policy.amendments.md    per-clause diffs, each with its trigger
+  terms-of-service.amendments.md
+  cookie-policy.amendments.md
+  dpa-records.amendments.md
+  legal-changelog.md              user-facing notice, plain language
+```
+
+Where nothing is affected, `out/legal/` is absent and the manifest says the compliance check found no affected documents — the same distinction the manifest draws everywhere else between "not earned" and "failed."
+
+### Where this stops
+
+Drafting an amendment is Ship's job. **Storing, versioning and publishing it is not** — that belongs in the project's own codebase, as a feature the pipeline can build like any other.
+
+Hold that line, because the alternative is the first run that touches a privacy policy trying to build a legal CMS as part of shipping an unrelated feature. If a project needs versioned legal records, that is its own spec and its own run. Approved amendments from `out/legal/` then feed it as the next pending version, rather than a file someone pastes into a CMS by hand.
 
 ## The final report
 
@@ -69,6 +101,7 @@ Ship's last act writes `out/report.html`: one self-contained file, generated thr
 - screenshots, inline, per route and viewport
 - parked decisions from every slice, each with its alternative
 - audit findings, severity marked
+- **legal amendments from `out/legal/`, each as its own accept/decline item**, visibly separate from the run approval
 - skill proposals and LESSONS.md observations, each as an accept/decline item
 
 One review session, on a phone. Everything the run decided without asking is in this file — that's the trade for not being interrupted fifteen times.

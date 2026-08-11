@@ -123,6 +123,24 @@ BRAND.md and DESIGN.md both sound like "brand." State the boundary in line one o
 
 ---
 
+## Reporting rules
+
+Agents report decisions, not activity. A run that narrates every file it touches buries the two lines that actually needed a human.
+
+**Don't report:** what you're about to do, each file created, each command run, each verification that passed, restatements of what the doc already says.
+
+**Do report, briefly:**
+
+- judgment calls made where the spec or doc was silent, and what was assumed
+- anything invented that wasn't asked for
+- anything in the existing setup that was changed, and why
+- contradictions found between instructions
+- where you'd argue with the instruction you were given
+
+Default to a few lines. When something needs a paragraph, write the paragraph — brevity is not a reason to hide a real problem.
+
+This applies to skill output, subagent handbacks, and the final report alike.
+
 ## The pipeline
 
 ```
