@@ -35,7 +35,7 @@ Allowed customization is narrow: approved `variant` / `size` props plus layout c
 
 ## Fix or ask
 
-Run `scripts/ds-lint.sh` on the files the task touched to get the mechanical hits, then apply judgment to the rest.
+Run this skill's own `skills/checks/design-system-guard/scripts/ds-lint.sh` on the files the task touched to get the mechanical hits, then apply judgment to the rest. (The framework's shared scripts live in the repo-root `scripts/`; this one is the skill's.)
 
 **Fix immediately** when the correct replacement is unambiguous:
 
