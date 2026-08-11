@@ -49,7 +49,7 @@ The final report is always an artifact. Changelog lines and social posts are alw
 
 ## Remote delivery `[ask]`
 
-Whether the final report is additionally published for remote review, once the Litedrop MCP is live. Never through display.dev or any other third party.
+Whether the final report is additionally published for remote review, once the Litedrop MCP is live.
 
 ```
 remote-report: <yes/no>

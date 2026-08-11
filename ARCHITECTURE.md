@@ -378,7 +378,7 @@ When `checks/compliance` reports an affected document, Ship drafts the amendment
 
 Ship's last act writes `out/report.html` — one self-contained HTML file with the manifest, screenshots, parked decisions and audit findings inline, generated through visualize so it's branded. Claude Code surfaces it when the run ends; open it, review, approve.
 
-**Remote delivery — via Litedrop, pending its MCP launch.** Once the Litedrop MCP is live, Ship additionally publishes the report through it and returns a link for phone review. Never through display.dev or any other third party — Litedrop is the house product and its own first customer. Until the MCP exists, the local report.html is the whole delivery.
+**Remote delivery — via Litedrop, pending its MCP launch.** Once the Litedrop MCP is live, Ship additionally publishes the report through it and returns a link for phone review. Until then, the local report.html is the whole delivery.
 
 ---
 

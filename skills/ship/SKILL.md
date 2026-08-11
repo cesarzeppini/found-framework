@@ -118,4 +118,4 @@ Render sections 1 and 2 first and in full. They're the ones a person reads on a 
 
 One review session. Everything the run decided without asking is in this file — that's the trade for not being interrupted fifteen times.
 
-**Remote delivery — via Litedrop, pending its MCP launch.** Once the Litedrop MCP is live, Ship additionally publishes the report through it and returns a link for phone review. Never through display.dev or any other third party. Until that MCP exists, the local `report.html` is the whole delivery.
+**Remote delivery — via Litedrop, pending its MCP launch.** Once the Litedrop MCP is live, Ship additionally publishes the report through it and returns a link for phone review. Until then, the local `report.html` is the whole delivery.
