@@ -62,6 +62,7 @@ Ship writes `out/report.html`, but the run owns what goes in it. Collect across 
 - every parked decision, with its alternative
 - audit and check findings, severity marked, blocking or advisory
 - the collateral in `out/`, linked from the manifest
+- legal amendment drafts from `out/legal/`, each gated individually — **approving the run never approves a legal change**
 - skill proposals and LESSONS.md observations, as accept/decline items
 - **if the run ended early: which stage, why, what was attempted**
 

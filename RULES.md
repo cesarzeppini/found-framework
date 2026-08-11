@@ -16,4 +16,5 @@ Operating rules and standing constraints. The shared source — CLAUDE.md and AG
 - **Harness-neutral wording.** Skills describe intent ("these tasks are independent and can run in parallel"), never tool-specific mechanism.
 - **Parallelism degrades to sequential.** tasks.md marks independence; a harness that can't parallelise runs in order and produces the same output.
 - **Skill changes pass the gate.** Agents propose skill diffs and LESSONS.md observations into out/skill-proposals/; nothing is applied or recorded unreviewed.
+- **Legal text is drafted, never finalised.** Compliance findings become per-clause amendment drafts in out/legal/, written against the jurisdiction in STACK.md, marked as drafts for a lawyer, and gated individually — approving a run never approves a legal change. Published legal files are never written directly. Storing and versioning legal records is a product feature with its own spec, not something a feature run builds on the way past.
 - **Context belongs to projects.** The framework repo has no context/ of its own.
