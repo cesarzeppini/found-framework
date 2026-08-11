@@ -9,6 +9,14 @@ End of feature. **Advisory — never blocks.**
 
 design-system-guard asks whether the parts are approved. This asks whether the result is any good. An interface can use every approved token and component and still be unusable, and no linter will say so.
 
+## Why there's no script
+
+**Judgment-only, deliberately.** There is no detector here, and one should not be added.
+
+Everything mechanical about the interface is already covered: design-system-guard owns tokens, components and overrides; a11y owns contrast, labels and focus. What's left is exactly the residue that can't be linted — whether the hierarchy leads the eye, whether the empty state looks designed or merely emptied, whether the copy survives contact with the layout.
+
+A detector here would re-grade what's already graded and go quiet on the rest, and its quiet would read as approval of the screens. Taste can't be linted; that's the premise of the check, not a limitation of it.
+
 ## Read the screenshots
 
 Work from `out/screens/` — both viewports, every route in the spec's affected-screens list — not from the code. The rendered result is the thing users get, and problems here are mostly invisible in a diff.

@@ -17,6 +17,14 @@ The builder already applied the obvious protections inline, per slice — RLS on
 
 Read the whole diff at once. That is the point of running here rather than per slice.
 
+## Why there's no script
+
+**Judgment-only, deliberately.** There is no detector here, and one should not be added.
+
+A scanner would catch the patterns that are already conventions — a concatenated query, a route missing its auth wrapper — and stay silent on the three things this check exists for. Reachability, a tenant filter absent from one query among twenty, a serialiser that accumulated a field over four slices: none of those is a property of a line. They're properties of how the whole diff fits together, which is why they survive per-slice review in the first place.
+
+A clean scan on those would read as clearance, and that is worse than no scan. The one mechanical part — known advisories on new dependencies — is what the ecosystem's own audit tooling is for; it doesn't need a framework script.
+
 ## Inputs
 
 Start from **SPEC.md's security surface** — new tables, new endpoints, auth changes, user input, file uploads, third-party keys. It names the surface; this check decides what that surface implies.
