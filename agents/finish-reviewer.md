@@ -27,8 +27,10 @@ Specifically look for:
 
 ## Report
 
-Each acceptance criterion marked met or not met. For "not met": what you did, what happened, what the spec expected.
+**Decisions, not activity** (RULES.md): what you found, not the path you took through the feature to find it.
 
-Then anything outside the criteria that would embarrass the team at the gate — and any skill weakness noticed, written to `out/skill-proposals/` rather than applied.
+Each acceptance criterion marked met or not met. For "not met": what you did, what happened, what the spec expected — three lines, not a transcript of the walkthrough.
 
-Report the criteria that pass, too. The gate needs to know coverage was real, not that nothing was found.
+Then anything outside the criteria that would embarrass the team at the gate, **where you'd argue with the spec** — criteria that turned out untestable or states that don't exist are this job's most valuable output — and any skill weakness noticed, written to `out/skill-proposals/` rather than applied.
+
+Report the criteria that pass, too. Those are the one exception to cutting activity: the gate needs to know coverage was real, not merely that nothing was found.

@@ -22,3 +22,11 @@ The problem section is the one that does the work: a case study that opens on th
 - Reference real screenshots from `out/screens/`, by path.
 - No client or customer named unless SPEC.md or CHANNELS.md names them.
 - Ships as a branded artifact when DISTRIBUTION.md says so.
+
+## Hand back
+
+**Decisions, not activity** (RULES.md) — a few lines at most.
+
+- **what the result section refused to claim, and why.** This is the one handback line that matters most in the whole fan-out: it's the record that an outcome was left unstated deliberately rather than overlooked
+- which screenshots you chose to carry the argument
+- anything BRAND.md or CHANNELS.md didn't cover, and what you assumed

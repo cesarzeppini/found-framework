@@ -22,3 +22,11 @@ If CHANNELS.md puts links in the first comment, write that comment as a labelled
 - No engagement bait: no "thoughts?", no one-word-per-line ladders, no manufactured lesson.
 - Claims bounded by the spec's success metric.
 - Plain text. Social posts never become branded artifacts.
+
+## Hand back
+
+**Decisions, not activity** (RULES.md) — a few lines at most. The post is the deliverable.
+
+- claims cut against the success metric
+- where CHANNELS.md was silent on mechanics you had to decide — link placement, hashtags, the fold
+- anything BRAND.md's LinkedIn section didn't cover, and what you assumed

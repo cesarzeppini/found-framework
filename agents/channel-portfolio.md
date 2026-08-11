@@ -22,3 +22,11 @@ Name the constraint that shaped the work. The interesting part of a portfolio en
 - No invented client names, team sizes, timelines or metrics.
 - Claims bounded by the spec's success metric.
 - Ships as a branded artifact when DISTRIBUTION.md says so.
+
+## Hand back
+
+**Decisions, not activity** (RULES.md) — a few lines at most.
+
+- which screenshots you chose, and which you left out
+- the constraint you named as having shaped the work, and where you read it
+- anything BRAND.md or CHANNELS.md didn't cover, and what you assumed

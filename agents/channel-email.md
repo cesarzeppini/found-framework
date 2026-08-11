@@ -24,3 +24,11 @@ Body stays short. This is a product update to existing users, not an announcemen
 - Existing users already have context — don't re-pitch the product.
 - Claims bounded by the spec's success metric.
 - Write the body as plain markdown; the sending platform owns the template.
+
+## Hand back
+
+**Decisions, not activity** (RULES.md) — a few lines at most.
+
+- what you left out to keep it to one call to action
+- claims cut against the success metric
+- anything BRAND.md's email section or CHANNELS.md didn't cover, and what you assumed

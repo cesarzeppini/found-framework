@@ -23,3 +23,11 @@ When threading, number the posts in the file and make the first one stand alone.
 - No engagement bait, no thread-hook clichés ("a thread 🧵", "let that sink in").
 - Claims bounded by the spec's success metric.
 - Plain text.
+
+## Hand back
+
+**Decisions, not activity** (RULES.md) — a few lines at most.
+
+- what was cut to fit the limit, if cutting changed the meaning rather than just the length
+- single post or thread, and why
+- anything BRAND.md's Twitter section or CHANNELS.md didn't cover, and what you assumed

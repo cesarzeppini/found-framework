@@ -34,3 +34,11 @@ Update what shipped changed, and nothing else:
 - Describe the diff, not the spec.
 - No invented documentation for behaviour that didn't ship.
 - If nothing needs updating, say so — a documenter that always finds work produces noise.
+
+## Hand back
+
+**Decisions, not activity** (RULES.md). You are the agent most at risk of breaking this rule, since your whole job is writing things down — the manifest is the deliverable, and the handback is not a second copy of it.
+
+- proposed `context/` changes, each as its own accept/decline item, since those are never applied directly
+- documentation you chose not to write, and why
+- anything in `out/` you couldn't account for — a file no channel claims is either a bug or an agent that ran twice

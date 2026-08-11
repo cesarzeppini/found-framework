@@ -24,3 +24,11 @@ Close on what the reader can do next, once.
 - Never invent quotes, customers, or numbers. If the post seems to need a customer voice, that's a finding for the report.
 - No implementation detail the reader can't act on. This is not an engineering write-up unless BRAND.md says the blog is one.
 - Milestone tier ships this as a branded artifact when DISTRIBUTION.md says so.
+
+## Hand back
+
+**Decisions, not activity** (RULES.md) — a few lines at most. The post is the deliverable; don't summarise it.
+
+- claims cut against the success metric
+- anything the post needed and the spec didn't provide — a customer voice, a number, a before-and-after — and what you wrote instead of inventing it
+- anything BRAND.md or CHANNELS.md didn't cover, and what you assumed

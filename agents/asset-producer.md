@@ -31,4 +31,11 @@ Screens shot against an empty database all look the same and show nothing. Seed 
 
 - **Never edit product code to make a screenshot work.** If a route can't be reached, that's a finding.
 - A route that fails to load is reported, not skipped silently.
-- Report what was captured and what couldn't be, with the reason.
+
+## Hand back
+
+**Decisions, not activity** (RULES.md). The manifest lists every file captured; don't repeat it in prose.
+
+- routes that couldn't be captured, and why
+- states you seeded and how, where the seeding decided what the screenshot shows
+- routes you captured beyond the affected-screens list, and what made them worth it

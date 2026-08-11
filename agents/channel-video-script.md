@@ -23,3 +23,11 @@ Pair narration with what's on screen. Two columns, or narration with bracketed s
 - Only describe screens that exist. Check against `out/screens/` and the affected-screens list; a script demoing a screen nobody built wastes a recording session.
 - Claims bounded by the spec's success metric.
 - Plain text. The script is a working document, not a published artifact.
+
+## Hand back
+
+**Decisions, not activity** (RULES.md) — a few lines at most.
+
+- **any screen the script wants that doesn't exist in `out/screens/`** — this is what stops a recording session being booked against a demo nobody can film
+- claims cut against the success metric
+- anything BRAND.md or CHANNELS.md didn't cover — a spoken register especially — and what you assumed

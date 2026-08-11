@@ -22,3 +22,11 @@ Lead with what changed for the user, in their words. The entry answers "what can
 - No internal vocabulary: no slice numbers, table names, component names, ticket ids.
 - No claims beyond the spec's success metric.
 - Plain text. Changelog lines never become branded artifacts.
+
+## Hand back
+
+**Decisions, not activity** (RULES.md) — a few lines at most. The entry itself is the deliverable; don't restate it.
+
+- where the diff and the spec disagreed, and which one the entry followed
+- claims cut against the success metric
+- anything BRAND.md or CHANNELS.md didn't cover, and what you assumed instead
