@@ -95,15 +95,18 @@ Hold that line, because the alternative is the first run that touches a privacy 
 
 ## The final report
 
-Ship's last act writes `out/report.html`: one self-contained file, generated through visualize so it's branded, carrying
+Ship's last act writes `out/report.html`: one self-contained file, generated through visualize so it's branded.
 
-- the manifest, with every piece of collateral linked
-- screenshots, inline, per route and viewport
-- parked decisions from every slice, each with its alternative
-- audit findings, severity marked
-- **legal amendments from `out/legal/`, each as its own accept/decline item**, visibly separate from the run approval
-- skill proposals and LESSONS.md observations, each as an accept/decline item
+The run skill owns what goes in it and hands it over in five sections; Ship's job is rendering them in that order, because the order is the point. **Decisions, not activity** — see RULES.md.
 
-One review session, on a phone. Everything the run decided without asking is in this file — that's the trade for not being interrupted fifteen times.
+1. **Needs you** — early termination, blocked items as questions, blocking findings that survived their attempts.
+2. **Decided without asking** — parked decisions with alternatives, assumptions, anything invented, anything changed in the existing setup, contradictions found, and where a stage would argue with the spec.
+3. **Findings** — check results, severity marked, one line per check including the clean ones.
+4. **Produced** — acceptance criteria met, screenshots inline per route and viewport, collateral linked from the manifest.
+5. **Approve individually** — legal amendments from `out/legal/`, visibly separate from the run approval, then skill proposals and LESSONS.md observations.
+
+Render sections 1 and 2 first and in full. They're the ones a person reads on a phone in a queue, and everything below them is reference — a report that opens on a screenshot gallery has buried its own reason for existing.
+
+One review session. Everything the run decided without asking is in this file — that's the trade for not being interrupted fifteen times.
 
 **Remote delivery — via Litedrop, pending its MCP launch.** Once the Litedrop MCP is live, Ship additionally publishes the report through it and returns a link for phone review. Never through display.dev or any other third party. Until that MCP exists, the local `report.html` is the whole delivery.

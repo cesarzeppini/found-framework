@@ -55,18 +55,34 @@ Each stage hands the next what it produced, and hands the report what it decided
 
 ## Assembling the final report
 
-Ship writes `out/report.html`, but the run owns what goes in it. Collect across every stage:
+Ship writes `out/report.html`, but the run owns what goes in it.
 
-- what shipped, against the spec's acceptance criteria
-- screenshots, per route and viewport
-- every parked decision, with its alternative
-- audit and check findings, severity marked, blocking or advisory
-- the collateral in `out/`, linked from the manifest
-- legal amendment drafts from `out/legal/`, each gated individually — **approving the run never approves a legal change**
-- skill proposals and LESSONS.md observations, as accept/decline items
-- **if the run ended early: which stage, why, what was attempted**
+**Report decisions, not activity** — see RULES.md. Nobody needs the list of files touched or commands run; a report that narrates the run buries the two lines that actually needed a human. Order it so a reader who stops after the first section has still seen everything that changes what they do next:
 
-A terminated run's report is the most useful one to get right — it's the only record of why the pipeline stopped.
+**1 — Needs you.** Whatever the run couldn't settle:
+
+- if the run ended early: which stage, why, what was attempted
+- irreversible or genuinely blocked items, as questions
+- blocking findings that survived their fix attempts
+
+**2 — Decided without asking.** The price of not being interrupted:
+
+- every parked decision, with the alternative named
+- assumptions made where the spec was silent
+- anything invented that nobody asked for
+- anything in the existing setup that was changed, and why
+- contradictions found between the spec, `context/` and the skills
+- **where a stage would argue with the spec it was given** — the spec is approved, not correct, and a run that noticed the difference is the only chance to hear about it before the next feature inherits the same wording
+
+**3 — Findings.** Check results, severity marked, blocking or advisory. One line per check including the clean ones, so a check that never ran is distinguishable from one that found nothing.
+
+**4 — Produced.** What shipped against the spec's acceptance criteria, screenshots per route and viewport, and the collateral in `out/` linked from the manifest.
+
+**5 — Approve individually.** Legal amendment drafts from `out/legal/` — **approving the run never approves a legal change** — then skill proposals and LESSONS.md observations, each accept/decline.
+
+A terminated run's report is the most useful one to get right: it's the only record of why the pipeline stopped, and section 1 is the whole report in that case.
+
+Brevity is not a reason to hide a real problem. Default to a few lines per item; when something needs a paragraph, write the paragraph.
 
 Surface the report when the run ends. The human opens it, reviews once, and approves.
 
