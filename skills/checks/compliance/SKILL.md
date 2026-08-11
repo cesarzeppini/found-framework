@@ -15,6 +15,29 @@ Security asks: can someone reach data they shouldn't? Compliance asks: **did we 
 
 The output is not a fix. It's a list of **which legal documents this feature affects and why**, handed to Ship, which drafts the amendments.
 
+## Deterministic pass
+
+```bash
+node skills/checks/compliance/scripts/compliance-scan.mjs --range main...HEAD
+```
+
+It flags exactly two things, because they are the only two a machine can settle without guessing:
+
+- **dependencies added in this range** — parsed from the manifests before and after, not grepped
+- **third-party hosts appearing in added lines** — literal URLs only, with localhost, lockfiles, generated output and prose excluded
+
+Repeated internal hosts can be silenced with `--ignore-host`.
+
+**It does not look for personal data**, and no future version should. Whether a field is personal data is a judgment about meaning and intent — a name column called `label`, a free-text note that will fill with addresses — and a script that guessed would produce its confident answers on exactly the cases that matter. A false "no personal data here" is worse than no check at all, because it reads as clearance.
+
+### The script never decides
+
+Its output is **candidates, not findings**. A dependency is not a processor until personal data reaches it; a host in a diff may never be called at runtime; and an internal service on a third-party domain is neither. Every line it prints is an input to the judgment below, which confirms it, dismisses it, or maps it to a document.
+
+So it **always exits 0** on a successful scan, signals or not — a non-zero exit would read as a verdict it isn't entitled to. Exit 2 means it couldn't scan at all.
+
+And a clean scan is **not a clean check**. Features add personal data, change retention, extend deletion paths and move data between regions without adding a single dependency or host. When the scan finds nothing, the judgment pass below is the entire check — run it exactly as thoroughly as when the scan lights up.
+
 ## Inputs
 
 **SPEC.md's compliance surface** — new personal data collected, new third-party processors, new cookies or trackers, changed retention, changed data location, anything touching minors or payments.
@@ -30,6 +53,8 @@ The output is not a fix. It's a list of **which legal documents this feature aff
 **New personal data.** Any field the product didn't previously store about a person: email, name, phone, address, date of birth, IP, location, device identifiers, uploaded photos, free-text fields where users will inevitably put personal information. Data about **people who aren't users** — an invitee, a referral, a contact — is the case most often missed, because no existing clause covers someone who never agreed to anything.
 
 **New third-party processors.** Any service the diff starts sending data to: email providers, analytics, error tracking, payment processors, storage, AI APIs. Each is a processor if personal data reaches it, and processors are usually enumerated in a published list that is now out of date.
+
+The scan's dependency and host lists start you here — but only start you. Trace whether personal data actually reaches each candidate before calling it a processor, and look for the ones the scan structurally cannot see: a service reached through an existing SDK, a host built from a variable or environment value, or an already-installed dependency the feature starts sending new fields to.
 
 **New cookies or trackers.** Anything written to a browser that isn't strictly necessary, plus the consent mechanism that should gate it. A tracker added without touching the consent banner is the single most common compliance regression in a web product.
 
