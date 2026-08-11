@@ -77,6 +77,7 @@ Write all of these, in this order.
 - *Out of scope* — explicit non-goals. The most valuable lines in the file; without them the pipeline helpfully builds three adjacent things nobody asked for. *Drafted.*
 - *Overrides* — where minimum-viable is dangerous. See below. *Drafted.*
 - *Security surface* — what this feature touches: new tables, new endpoints, auth changes, user input, file uploads, third-party keys. Not checks, just surface — security-audit reads this. *Derived.*
+- *Compliance surface* — the same facts read for a different consequence: new personal data collected, new third-party processors, new cookies or trackers, changed retention, changed data location, anything touching minors or payments. **Empty for most features, and an empty field is a checked box, not a skipped one** — write "none" rather than omitting the field, so a later reader can tell it was considered. Read alongside the jurisdiction in STACK.md, since what counts as consequential depends on it. *Derived.*
 - *Data rules* — what must not be lost, whether migrations must be reversible. *Drafted.*
 - *Effort ceiling* — the only legitimate mid-run halt. Filled from the plan's slice estimate once Plan runs; leave it stated as "to be set by Plan" in the approved spec. *Drafted from the plan's estimate.*
 
