@@ -108,7 +108,7 @@ This file is what stops the pipeline building bulletproof scalable infrastructur
 
 **DESIGN.md** + **tokens.css** — the visual identity. Colors, typography, radius, spacing, elevation. Tokens are machine-readable; tokens.css is the source of truth and DESIGN.md mirrors it.
 
-**STACK.md** — the standing technical facts of this project. Scaffolded in Lovable, Supabase, Supabase Auth, RLS applied, moved to GitHub, refined in Claude Code. Also: pointer to the component registry, which checks are enabled, baseline security rules for this stack.
+**STACK.md** — the standing technical facts of this project. Scaffolded in Lovable, Supabase, Supabase Auth, RLS applied, moved to GitHub, refined in Claude Code. Also: pointer to the component registry, which checks are enabled, baseline security rules for this stack, where the legal documents live in the repo, and the jurisdiction they're written for.
 
 STACK.md changes what the spec has to ask about. If Supabase Auth is already in place, "session handling must be production-grade" is satisfied by default and the spec skill doesn't need to raise it.
 
@@ -194,6 +194,7 @@ What keeps the list short is the assumptions section. Anything derived but uncer
 - *Out of scope* — explicit non-goals. The most valuable line in the file. Without it the agent helpfully builds three adjacent things nobody asked for. *Drafted.*
 - *Overrides* — where minimum-viable is dangerous. Written as **bars, not solutions**. Not "use Supabase Auth" — that's implementation. Instead: "session handling must be production-grade, not hand-rolled." The spec sets the bar; the builder picks what clears it. Drafted by the skill itself against COMPANY.md and PRODUCT.md, sanity-checked by a reasoning-tier pass, approved as part of spec review — never a separate interruption. *Drafted.*
 - *Security surface* — what this feature touches: new tables, new endpoints, auth changes, user input, file uploads, third-party keys. Not checks, just surface. *Derived.*
+- *Compliance surface* — the same facts read for a different consequence: new personal data collected, new third-party processors, new cookies or trackers, changed retention, changed data location, anything touching minors or payments. Empty for most features, and an empty field is a checked box, not a skipped one. *Derived.*
 - *Data rules* — what must not be lost, whether migrations must be reversible. *Drafted.*
 - *Effort ceiling* — the only legitimate mid-run halt. If slice count blows past the plan's estimate, the spec was wrong, and continuing burns effort on a bad foundation. Stop, report, wait. *Drafted from the plan's estimate.*
 
@@ -286,6 +287,7 @@ Two levels:
 - Screenshots of every route in the spec's affected-screens list. Playwright, mobile and desktop. This is the only real check on whether the interface is any good — taste can't be linted, so a human looks. Batched at feature level, not per slice, so approval isn't fifteen interruptions a day.
 - `checks/a11y` — axe-core over the same Playwright run. Blocking.
 - `checks/security-audit` — once, reading the security surface plus the full diff. Blocking; unresolvable high-severity findings end the run into the final report.
+- `checks/compliance` — once, alongside the security audit. Reads the compliance surface plus the diff and reports which legal documents are affected and why. Advisory as a check; its consequences land in Ship.
 - `checks/design-quality` — anti-pattern pass. Advisory, output next to the screenshots so both get reviewed together.
 - `checks/design-system-guard` across the whole diff, catching drift the per-slice runs missed. Fully automated; parked cases from the slices resurface here, resolved or listed for the final report.
 
@@ -345,6 +347,15 @@ One file per channel, predictable names, plus `manifest.md` listing what was gen
 
 The gate is here — between out/ and publish, not inside Ship.
 
+#### Legal and compliance
+
+When `checks/compliance` reports an affected document, Ship drafts the amendments: Privacy Policy, Terms of Service, Cookie Policy, GDPR/DPA records. Four rules make this safe rather than reckless:
+
+- **Diffs against the live text, never rewrites.** Each amendment names the triggering change beside it, so the reason is reviewable clause by clause.
+- **Drafts only.** Legal text is not a changelog. Where jurisdictional exposure is real, the output is explicitly marked as a draft for a lawyer, not a finished document. Automating legal copy without this is automating liability.
+- **A separate legal changelog.** Users need notice of material changes, and it follows different rules from a product changelog: effective date, what changed in plain language, whether continued use constitutes acceptance.
+- **Everything lands in `out/legal/`** and stays there. Gated harder than the rest — approving the run does not approve the legal changes; those are marked individually.
+
 #### The final report
 
 Ship's last act writes `out/report.html` — one self-contained HTML file with the manifest, screenshots, parked decisions and audit findings inline, generated through visualize so it's branded. Claude Code surfaces it when the run ends; open it, review, approve.
@@ -362,6 +373,7 @@ Not stages. Invoked by stages.
 | design-system-guard | every UI slice + full diff at review | yes |
 | a11y | end of feature, on the Playwright run | yes |
 | security-audit | once, after all slices | yes |
+| compliance | once, at review | no, feeds Ship |
 | voice-guard | on Ship's copy, and user-facing strings in build | yes |
 | design-quality | end of feature | no, advisory |
 
@@ -376,6 +388,21 @@ Already written and updated (v2). Enforces that every interface uses only approv
 Denylist table — banned / why / use instead — plus `scripts/prose-lint.mjs` that fails on hits. Structure taken from Impeccable's STYLE.md, words replaced with ours. Judgment layer on top for register.
 
 ---
+
+## Legal documents as versioned records — a product feature, not a framework one
+
+Drafting an amendment is Ship's job. Storing, versioning and publishing it is not — that belongs in the project's own codebase, as a feature the pipeline can build like any other.
+
+The distinction matters: without it, the first run that touches a privacy policy tries to build a legal CMS as part of shipping an unrelated feature.
+
+What that feature looks like when a project needs it — spec it and run the pipeline on it:
+
+- Legal documents stored as versioned records, each with a status (`draft`, `pending`, `live`, `superseded`), an effective date, and the change that triggered it.
+- An admin view listing versions, with the newest sitting in `pending` awaiting approval.
+- Approving a pending version publishes it, supersedes the previous one, and updates the effective date shown publicly.
+- Approval cascades to the notification surfaces the project actually has: email template drafted and queued, in-app notice triggered, website page updated. Which surfaces exist is per project — DISTRIBUTION.md already carries that list.
+
+Ship's `out/legal/` drafts feed this: approved amendments become the next `pending` version rather than a file someone pastes into a CMS by hand.
 
 ## Skills learn from runs — with a gate
 
@@ -403,9 +430,7 @@ Nothing in `skills/` or `tasks.md` names a model. Tasks carry a tier:
 | standard | build |
 | light | copy |
 
-Each harness maps tiers to its own models in **one place** — a short table in CLAUDE.md, and the same table in AGENTS.md. Switching providers is a one-file edit.
-
-**Nobody fills the table by hand.** The first run in a harness detects which models that harness currently offers, maps reasoning / standard / light to the best fits, and writes the table with a one-line reason per row. Re-run the detection when a provider changes its lineup. A harness writes only its own table — guessing another's model names produces a table that looks authoritative and is wrong, so the unfilled one carries a note saying the first run there fills it. If a harness offers only one model, every tier resolves to it and the pipeline still runs.
+The tier→model table in CLAUDE.md (and AGENTS.md for other harnesses) is **written by the LLM, never by the human**. During scaffold — and again whenever it notices the table is stale — the running LLM detects which models its harness offers and fills the mapping itself (e.g. in Claude Code: light → Haiku, standard → Sonnet, reasoning → the strongest available), with a one-line reason per row. It never guesses another harness's models: each harness's first run fills its own table. The human reviews it like any other generated file. If a harness offers only one model, every tier resolves to it and the pipeline still runs.
 
 ### Build subagents are spawned at runtime
 
