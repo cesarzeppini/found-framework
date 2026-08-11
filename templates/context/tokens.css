@@ -1,0 +1,67 @@
+/* Design tokens — the source of truth for visual values.
+ *
+ * DESIGN.md mirrors this file in prose; when they disagree, this file wins.
+ *
+ * design-system-guard derives its allowlist from what is defined here: every
+ * semantic token below is allowed, and anything else in the codebase is a
+ * violation. That makes the naming load-bearing — a value with no semantic name
+ * cannot be enforced, and a raw hex in a component is exactly what the check
+ * exists to catch.
+ *
+ * [derive → confirm] from the live site and existing styles. Replace every
+ * placeholder value; the names below are a starting structure, not a palette.
+ */
+
+:root {
+  /* Surfaces and foreground */
+  --background: <value>;
+  --foreground: <value>;
+  --card: <value>;
+  --card-foreground: <value>;
+  --muted: <value>;
+  --muted-foreground: <value>;
+
+  /* Brand and intent */
+  --primary: <value>;
+  --primary-foreground: <value>;
+  --secondary: <value>;
+  --secondary-foreground: <value>;
+  --accent: <value>;
+  --accent-foreground: <value>;
+  --destructive: <value>;
+  --destructive-foreground: <value>;
+
+  /* Lines and focus */
+  --border: <value>;
+  --input: <value>;
+  --ring: <value>;
+
+  /* Typography */
+  --font-sans: <value>;
+  --font-mono: <value>;
+
+  /* Radius */
+  --radius-sm: <value>;
+  --radius-md: <value>;
+  --radius-lg: <value>;
+
+  /* Elevation */
+  --shadow-sm: <value>;
+  --shadow-md: <value>;
+  --shadow-lg: <value>;
+
+  /* Spacing scale — add or remove steps to match the real system */
+  --space-1: <value>;
+  --space-2: <value>;
+  --space-3: <value>;
+  --space-4: <value>;
+  --space-6: <value>;
+  --space-8: <value>;
+}
+
+/* Dark mode, if the product has one. Same token names, different values —
+ * never a second set of names, or every consumer has to know which set it is in. */
+.dark {
+  --background: <value>;
+  --foreground: <value>;
+}
