@@ -1,6 +1,6 @@
 ---
 name: review
-description: End-of-feature pass over the diff against SPEC.md — user-story test, screenshots of every affected route, then a11y, security-audit, design-quality and design-system-guard running in parallel on the same diff. Reasoning tier, writes no code, and runs in the harness that did not build. Triggers when every slice in tasks.md has passed.
+description: End-of-feature pass over the diff against SPEC.md — user-story test, screenshots of every affected route, then a11y, security-audit, compliance, design-quality and design-system-guard running in parallel on the same diff. Reasoning tier, writes no code, and runs in the harness that did not build. Triggers when every slice in tasks.md has passed.
 ---
 
 # Review
