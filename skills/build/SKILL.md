@@ -69,6 +69,8 @@ Irreversible or genuinely blocked items also go to the report, as questions rath
 
 ## Result block
 
+**Report decisions, not activity** (RULES.md). Nobody needs the files you created or the commands you ran — the diff already says that. One block per slice, then one handback at the end of the build.
+
 End every slice with this block.
 
 ```text
@@ -78,3 +80,11 @@ Slice 3 — invite acceptance
   Parked (1) src/routes/invite.tsx:22  used existing toast for expiry error;
              spec implies an inline message
 ```
+
+The test and check lines are one result each, not a narration of every assertion — that distinction is what keeps a slice block readable.
+
+At the end of the build, hand back briefly:
+
+- anything invented that the spec didn't ask for, and why the slice needed it
+- anything in the existing setup that changed beyond Stage 0's plan
+- **where you'd argue with the spec**: criteria that turned out untestable, states that didn't exist, copy that didn't survive contact with the interface. Build is where a spec's wishful thinking becomes concrete, and nothing downstream will notice it as clearly.

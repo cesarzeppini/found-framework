@@ -73,3 +73,10 @@ Set it with a little headroom — a ceiling that trips on the first surprise hal
 ## Output
 
 Write `work/<feature>/tasks.md` with the prep block, the slices, the feature tier and the effort ceiling. Then hand back to the run skill — Plan does not start building.
+
+**Report decisions, not activity** (RULES.md). Not the slice list, which is in the file — briefly:
+
+- slices that were hard to cut, and what made them hard
+- acceptance criteria that didn't map cleanly onto any slice, and how you resolved it
+- the tier tag when it was a close call, and which way you went
+- **where you'd argue with the spec**: criteria that can't be tested as written, states the spec didn't list that the build will hit anyway, scope the out-of-scope section should have excluded. The spec is approved, not correct, and planning is where its gaps first become visible.

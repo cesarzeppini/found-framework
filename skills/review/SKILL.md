@@ -53,13 +53,14 @@ This is why the whole set has to be harness-neutral: the review half runs somewh
 
 ## Report
 
-Hand back one block for the final report:
+**Report decisions, not activity** (RULES.md). Not the routes you visited or the checks you launched — what came back from them. Hand back one block for the final report, leading with what needs a human:
 
-- acceptance criteria, each met or not, with the failing ones named
-- screenshot paths, per route and viewport
-- findings per check, severity marked, blocking or advisory
+- blocking findings that survived their fix attempts, and what was tried
+- acceptance criteria, each met or not, with the failing ones named — including the ones that passed, so the gate can tell coverage from silence
+- findings per check, severity marked, blocking or advisory, one line per check including the clean ones
 - affected legal documents from `checks/compliance`, passed to Ship
 - parked decisions carried from the slices, resolved or still open
+- **where you'd argue with the spec** — a feature that meets every criterion and still isn't right is the finding only this stage can make, since it's the first time anyone sees the whole thing working
 - any skill weakness noticed, written to `out/skill-proposals/` rather than applied
 
 Anything you'd have fixed yourself belongs in the report, not in the code.
