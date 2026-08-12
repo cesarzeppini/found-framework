@@ -9,16 +9,20 @@ Run this check at the end of every slice that touches UI, and once more across t
 
 ## Approved components
 
-**A component is approved when its own file carries an `@approved` marker in a comment in the first few lines.** Nothing else confers approval — not living in the components directory, not being imported somewhere, not looking finished.
+**A component is approved when its own file carries an `@approved` marker in a comment within the first 5 lines.** Nothing else confers approval — not living in a components directory, not being imported somewhere, not looking finished.
 
 ```tsx
 // @approved
 export const Button = ...
 ```
 
-Any comment syntax the file uses is fine (`//`, `/* */`, `{/* */}`, `#`), as long as the marker is near the top where a human reading the file sees it immediately.
+Any comment syntax the file uses is fine (`//`, `/* */`, `{/* */}`, `#`).
 
-Build the approved list at check time by scanning the component directory — `components:` in `context/STACK.md`, defaulting to `src/components/ui`. Never hardcode a list.
+**The 5-line window is part of the rule, not an implementation detail.** The marker has to be where someone opening the file sees it immediately; a marker below line 5 does not count and the component reads as unapproved. If that surprises someone, the fix is to move the marker up, never to widen the window.
+
+Build the approved list at check time by scanning the directories in `components:` (`context/STACK.md`), which **may list several** — hand-built components and generated plumbing usually live apart, and every listed directory is checked. Defaults to `src/components/ui` when the key is absent. Never hardcode a list.
+
+Imports are matched by directory tail rather than by a fixed alias, so `@/components/ui/x`, `~/components/ui/x` and `../../components/ui/x` all resolve to the same component. A project that uses no alias at all works the same way.
 
 ### Agents never add the marker
 

@@ -31,12 +31,14 @@ If any of these is missing, standing it up is a Stage 0 task — the slice gates
 > **Read by `design-system-guard`.** Keep the `components:` key and give it a real path.
 
 ```
-components: <path, e.g. src/components/ui>
+components: <path>[, <path>...]   e.g. src/components/ui, src/components/app
 ```
 
-Where the design system's components live. Living there is not approval.
+Where the design system's components live. **List as many directories as the project has** — hand-built components and generated plumbing usually sit in different folders, and the guard checks every directory listed. Living in one of them is not approval.
 
-**A component is approved when its own file carries an `@approved` marker in a comment in the first few lines** — that marker is the entire registry. The guard scans this directory, treats marked files as the approved list, and parks every use of an unmarked one.
+**A component is approved when its own file carries an `@approved` marker in a comment within the first 5 lines** — that marker is the entire registry. The window is deliberate: the marker has to be where someone opening the file sees it, not buried further down. A marker below line 5 does not count, and the component reads as unapproved.
+
+The guard scans these directories, treats marked files as the approved list, and parks every use of an unmarked one. Import paths are matched by directory tail, so whatever alias the project uses — `@/`, `~/`, or a relative path — resolves the same way.
 
 **Only a human adds the marker.** Agents may add it when explicitly asked to in the moment ("mark Button as approved") and never on their own initiative — not during a run, not as a fix for a parked item, not because a component looks done. An agent that can approve its own components turns the check into a mirror.
 
