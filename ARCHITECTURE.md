@@ -108,7 +108,7 @@ This file is what stops the pipeline building bulletproof scalable infrastructur
 
 **DESIGN.md** + **tokens.css** — the visual identity. Colors, typography, radius, spacing, elevation. Tokens are machine-readable; tokens.css is the source of truth and DESIGN.md mirrors it.
 
-**STACK.md** — the standing technical facts of this project. Scaffolded in Lovable, Supabase, Supabase Auth, RLS applied, moved to GitHub, refined in Claude Code. Also: pointer to the component registry, which checks are enabled, baseline security rules for this stack, where the legal documents live in the repo, and the jurisdiction they're written for.
+**STACK.md** — the standing technical facts of this project. Scaffolded in Lovable, Supabase, Supabase Auth, RLS applied, moved to GitHub, refined in Claude Code. Also: pointer to the component registry, which checks are enabled, baseline security rules for this stack, where the legal documents live in the repo, and the jurisdiction they're written for. A legal document the project doesn't have is recorded as `none` — meaning it doesn't exist yet, not that it's unwanted, so a feature that requires it gets it drafted rather than skipped.
 
 STACK.md changes what the spec has to ask about. If Supabase Auth is already in place, "session handling must be production-grade" is satisfied by default and the spec skill doesn't need to raise it.
 
@@ -371,7 +371,7 @@ The gate is here — between out/ and publish, not inside Ship.
 
 #### Legal and compliance
 
-When `checks/compliance` reports an affected document, Ship drafts the amendments: Privacy Policy, Terms of Service, Cookie Policy, GDPR/DPA records. If a required document doesn't exist yet, Ship drafts it from scratch rather than reporting its absence.
+When `checks/compliance` reports an affected document, Ship drafts the amendments: Privacy Policy, Terms of Service, Cookie Policy, GDPR/DPA records. If a required document doesn't exist yet, Ship drafts it from scratch rather than reporting its absence — named `<document>.draft.md`, since a full draft is not a per-clause amendment and must not read as an edit to something already published. STACK.md marking a document `none` means it doesn't exist yet, not that it isn't wanted.
 
 **This is not a channel and is not toggleable.** It never appears in DISTRIBUTION.md, and no project setting can switch it off — it's triggered by the spec's compliance surface, not by distribution preferences. A feature that changes data retention gets a policy amendment drafted whether or not anyone remembered to enable something.
 
@@ -439,6 +439,14 @@ Instead:
 - Agents may also propose **observations** for `skills/<name>/LESSONS.md` — softer than a rule, read by the skill on later runs. These land in the final report too, as accept/decline items next to the skill proposals. Nothing enters LESSONS.md unreviewed: a file that skills read every run is a side door if it's unmoderated.
 
 Same two-stop model: skills improve every run, but every change — rule or note — passes the gate you're already standing at. The report marks each proposal approve/decline; approving applies it.
+
+### The doc states the conventions
+
+An approved skill change often introduces a **convention** the implementation then depends on — what a file is named, what a marker means, which exit code carries which meaning, where a threshold sits. Record it here, in the same commit as the change.
+
+This document is the input to build-order step 2, so a convention living only in a skill file is erased the next time that skill is regenerated from this doc. A follow-up commit isn't enough: the gap between the two is exactly where a regeneration would lose it.
+
+The scope is conventions, not decisions. **Design decisions stay with the human** — a skill records what it now depends on, and never rewrites this document's decisions to match itself. When the two genuinely disagree, that's a report item, not an edit.
 
 ## Portability
 

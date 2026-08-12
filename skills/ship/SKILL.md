@@ -70,7 +70,7 @@ out/
 
 When `checks/compliance` reports an affected document, draft the amendments: Privacy Policy, Terms of Service, Cookie Policy, GDPR/DPA records. Read the live text from the paths in `context/STACK.md`, and write against the jurisdiction it names.
 
-**If a required document doesn't exist yet, draft it from scratch** rather than reporting its absence. A project whose feature just started collecting personal data needs a privacy policy more urgently than one that already has a stale clause — reporting the gap and stopping leaves it with nothing.
+**If a required document doesn't exist yet, draft it from scratch** rather than reporting its absence. A project whose feature just started collecting personal data needs a privacy policy more urgently than one that already has a stale clause — reporting the gap and stopping leaves it with nothing. STACK.md marking a document `none` means it doesn't exist, not that it isn't wanted. A document drafted from scratch is a full draft rather than a per-clause diff; name it `<document>.draft.md` so it can't be mistaken for an amendment to something already published.
 
 **This is not a channel and is not toggleable.** Legal never appears in DISTRIBUTION.md, and no project setting switches it off. It's triggered by the spec's compliance surface, not by distribution preferences — a feature that changes data retention gets its amendment drafted whether or not anyone remembered to enable something. Do not check DISTRIBUTION.md before drafting, and do not skip drafting because a channel is off; the tier × channel rule governs collateral, and this isn't collateral.
 
@@ -90,6 +90,7 @@ out/legal/
   terms-of-service.amendments.md
   cookie-policy.amendments.md
   dpa-records.amendments.md
+  cookie-policy.draft.md          a document that didn't exist — full draft
   legal-changelog.md              user-facing notice, plain language
 ```
 
