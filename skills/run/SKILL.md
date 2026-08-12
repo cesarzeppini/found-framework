@@ -79,7 +79,9 @@ Ship writes `out/report.html`, but the run owns what goes in it.
 
 **4 — Produced.** What shipped against the spec's acceptance criteria, screenshots per route and viewport, and the collateral in `out/` linked from the manifest.
 
-**5 — Approve individually.** Legal amendment drafts from `out/legal/` — **approving the run never approves a legal change** — then skill proposals and LESSONS.md observations, each accept/decline.
+**5 — Component registry.** From `design-system-guard --registry`: the approved components, then every unmarked component that is imported anywhere with its import count, then a count of the unmarked and unimported. **The whole codebase, not this run's diff** — in a new project the codebase is the backlog, and a component in use since before the framework arrived shows up in no diff. Inventory, not a finding; it doesn't block, and a long first list is expected.
+
+**6 — Approve individually.** Legal amendment drafts from `out/legal/` — **approving the run never approves a legal change** — then skill proposals and LESSONS.md observations, each accept/decline.
 
 A terminated run's report is the most useful one to get right: it's the only record of why the pipeline stopped, and section 1 is the whole report in that case.
 

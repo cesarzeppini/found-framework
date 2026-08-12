@@ -121,7 +121,8 @@ The run skill owns what goes in it and hands it over in five sections; Ship's jo
 2. **Decided without asking** — parked decisions with alternatives, assumptions, anything invented, anything changed in the existing setup, contradictions found, and where a stage would argue with the spec.
 3. **Findings** — check results, severity marked, one line per check including the clean ones.
 4. **Produced** — acceptance criteria met, screenshots inline per route and viewport, collateral linked from the manifest.
-5. **Approve individually** — legal amendments from `out/legal/`, visibly separate from the run approval, then skill proposals and LESSONS.md observations.
+5. **Component registry** — approved components, then unmarked ones that are in use with their import counts, then a count of unmarked-and-unimported. Whole codebase, not this run's diff.
+6. **Approve individually** — legal amendments from `out/legal/`, visibly separate from the run approval, then skill proposals and LESSONS.md observations.
 
 Render sections 1 and 2 first and in full. They're the ones a person reads on a phone in a queue, and everything below them is reference — a report that opens on a screenshot gallery has buried its own reason for existing.
 

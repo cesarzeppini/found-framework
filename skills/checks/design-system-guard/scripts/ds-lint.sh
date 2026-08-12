@@ -13,34 +13,6 @@ set -uo pipefail
 MARKER_WINDOW=5
 MARKER_RE='(^|[[:space:]/*#{])@approved([[:space:]]|$)'
 
-# --added-markers <git-range>: list every @approved marker added in that range.
-# Used by the full-diff pass at review so a marker cannot be added silently —
-# these are reported whether or not any stage said it added one.
-if [ "${1:-}" = "--added-markers" ]; then
-  RANGE="${2:-main...HEAD}"
-  FOUND=$(git diff --unified=0 "$RANGE" 2>/dev/null \
-          | awk '/^\+\+\+ /{f=substr($0,7)} /^\+/ && /@approved/ && !/^\+\+\+/{print f}' \
-          | sort -u)
-  if [ -n "$FOUND" ]; then
-    echo "== @approved markers added in $RANGE"
-    printf '%s\n' "$FOUND" | sed 's/^/  /'
-    echo
-    echo "   Report each of these in the final report as a Needs-you item, naming who"
-    echo "   asked for it — including when a human did ask."
-    exit 1
-  fi
-  echo "No @approved markers added in $RANGE"
-  exit 0
-fi
-
-TARGETS=("$@")
-if [ ${#TARGETS[@]} -eq 0 ]; then
-  TARGETS=()
-  [ -d src/routes ] && TARGETS+=("src/routes")
-  [ -d src/components ] && TARGETS+=("src/components")
-  [ ${#TARGETS[@]} -eq 0 ] && TARGETS=("src")
-fi
-
 # Where the design system's components live. `components:` in context/STACK.md may
 # list several directories, comma- or space-separated — real components and the
 # generated plumbing they sit on usually live apart.
@@ -66,6 +38,109 @@ fi
 
 # Skip the components' own sources — they define the system rather than consume it.
 strip_own() { awk -F: -v dirs="$DIR_ALT" '$1 !~ dirs'; }
+
+# tail/name key for a component file, e.g. src/components/ui/button.tsx -> components/ui/button
+component_key() { # dir file
+  local tail base
+  tail=$(printf '%s' "$1" | sed -E 's|^\./||; s|^src/||; s|/+$||')
+  base=$(basename "$2"); base="${base%.*}"
+  printf '%s/%s' "$tail" "$base"
+}
+
+is_marked() { head -"$MARKER_WINDOW" "$1" 2>/dev/null | grep -qE "$MARKER_RE"; }
+
+# Extract the imported component key from a `path:line:content` match.
+# The path prefix MUST be dropped first: a component's own file path contains the
+# same directory tail, so scanning the whole line returns the file itself rather
+# than what it imports.
+import_key() { # grep-line
+  printf '%s' "${1}" | cut -d: -f3- | grep -oE "($TAIL_ALT)/[A-Za-z0-9_-]+" | head -1
+}
+
+# --added-markers <git-range>: list every @approved marker added in that range.
+# Used by the full-diff pass at review so a marker cannot be added silently —
+# these are reported whether or not any stage said it added one.
+if [ "${1:-}" = "--added-markers" ]; then
+  RANGE="${2:-main...HEAD}"
+  FOUND=$(git diff --unified=0 "$RANGE" 2>/dev/null \
+          | awk '/^\+\+\+ /{f=substr($0,7)} /^\+/ && /@approved/ && !/^\+\+\+/{print f}' \
+          | sort -u)
+  if [ -n "$FOUND" ]; then
+    echo "== @approved markers added in $RANGE"
+    printf '%s\n' "$FOUND" | sed 's/^/  /'
+    echo
+    echo "   Report each of these in the final report as a Needs-you item, naming who"
+    echo "   asked for it — including when a human did ask."
+    exit 1
+  fi
+  echo "No @approved markers added in $RANGE"
+  exit 0
+fi
+
+# --registry [root]: inventory for the final report's Component registry section.
+# Scans the WHOLE codebase for imports, not this run's diff: in a new project the
+# entire codebase is the backlog, and a component in use since before the framework
+# was installed appears in no diff and would never otherwise surface.
+if [ "${1:-}" = "--registry" ]; then
+  ROOT="${2:-.}"
+
+  # every import of a configured component, counted by distinct importing file
+  IMPORT_TALLY=$(GREP -e "from [\"'][^\"']*($TAIL_ALT)/[A-Za-z0-9_-]+[\"']" "$ROOT" 2>/dev/null \
+    | while IFS= read -r line; do
+        key=$(import_key "$line")
+        [ -n "$key" ] && printf '%s\t%s\n' "$key" "${line%%:*}"
+      done | sort -u | cut -f1 | sort | uniq -c)
+
+  APPROVED_LIST=""; USED_UNMARKED=""; UNUSED_COUNT=0
+  for d in $COMPONENTS_DIRS; do
+    [ -d "$d" ] || continue
+    while IFS= read -r f; do
+      key=$(component_key "$d" "$f")
+      if is_marked "$f"; then
+        APPROVED_LIST="$APPROVED_LIST$key"$'\n'
+      else
+        n=$(printf '%s\n' "$IMPORT_TALLY" | awk -v k="$key" '$2==k{print $1; exit}')
+        if [ -n "$n" ] && [ "$n" -gt 0 ] 2>/dev/null; then
+          USED_UNMARKED="$USED_UNMARKED$(printf '%-44s used in %s file(s)' "$key" "$n")"$'\n'
+        else
+          UNUSED_COUNT=$((UNUSED_COUNT + 1))
+        fi
+      fi
+    done < <(find "$d" -type f \( -name '*.tsx' -o -name '*.jsx' -o -name '*.ts' \) 2>/dev/null)
+  done
+
+  APPROVED_LIST=$(printf '%s' "$APPROVED_LIST" | sort -u)
+  USED_UNMARKED=$(printf '%s' "$USED_UNMARKED" | sort -u)
+  n_appr=$(printf '%s' "$APPROVED_LIST" | grep -c . || true)
+  n_used=$(printf '%s' "$USED_UNMARKED" | grep -c . || true)
+
+  echo "== component registry"
+  echo
+  echo "Approved ($n_appr)"
+  if [ "$n_appr" -gt 0 ]; then printf '%s\n' "$APPROVED_LIST" | sed 's/^/  /'; else
+    echo "  (none yet — expected on a new project)"; fi
+  echo
+  echo "Unmarked but in use ($n_used)"
+  if [ "$n_used" -gt 0 ]; then
+    printf '%s\n' "$USED_UNMARKED" | sed 's/^/  /'
+    echo
+    echo "  Each is a decision waiting: mark it approved, or replace its uses."
+  else
+    echo "  (none)"
+  fi
+  echo
+  echo "Unmarked and unimported: $UNUSED_COUNT file(s) — not listed."
+  echo "  Nothing depends on them, so they are inventory rather than a decision."
+  exit 0
+fi
+
+TARGETS=("$@")
+if [ ${#TARGETS[@]} -eq 0 ]; then
+  TARGETS=()
+  [ -d src/routes ] && TARGETS+=("src/routes")
+  [ -d src/components ] && TARGETS+=("src/components")
+  [ ${#TARGETS[@]} -eq 0 ] && TARGETS=("src")
+fi
 
 HITS=0
 report() { # label pattern
@@ -155,9 +230,7 @@ if [ -n "$EXISTING_DIRS" ]; then
   while IFS= read -r line; do
     [ -z "$line" ] && continue
     file="${line%%:*}"
-    # grep -oE, not sed: the tail alternation contains "|", which would collide
-    # with any sed delimiter.
-    key=$(printf '%s' "$line" | grep -oE "($TAIL_ALT)/[A-Za-z0-9_-]+" | head -1)
+    key=$(import_key "$line")
     if ! printf '%s\n' "$APPROVED" | grep -qx "$key"; then
       UNAPPROVED+="$file  ->  $key"$'\n'
     fi

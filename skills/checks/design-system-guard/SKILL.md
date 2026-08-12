@@ -63,6 +63,26 @@ Consequences:
 - Component directory missing, or STACK.md has no `components:` key → report it as a finding and fall back to flagging only mechanical violations.
 - **No component carries the marker yet** → report that plainly. Everything is unapproved, which is the correct reading of a project that hasn't approved anything, not a reason to assume the check is misconfigured.
 
+## Component registry, for the final report
+
+Once per run, produce the inventory that becomes the report's **Component registry** section:
+
+```bash
+skills/checks/design-system-guard/scripts/ds-lint.sh --registry src
+```
+
+Three groups, and the split is the point:
+
+**Approved** — every component carrying the marker. The current design system, stated plainly.
+
+**Unmarked but in use** — every unmarked component imported anywhere, with how many files import it. Each is a decision waiting: mark it approved, or replace its uses.
+
+**Unmarked and unimported** — a count only, never a listing. Nothing depends on them, so they're inventory rather than decisions, and listing them would bury the group that needs answers.
+
+**Scan the whole codebase, not this run's diff.** In a new project the entire codebase is the backlog, and a component that has been in use since before the framework was installed appears in no diff — it would never surface otherwise. That's exactly the component most worth asking about, since it's load-bearing and unreviewed.
+
+This section is an inventory, not a finding: it doesn't block, and a long list on the first run is expected rather than alarming. It shrinks as components get marked.
+
 ## Tokens
 
 The color/token allowlist is not maintained by hand. Derive it at check time from `context/tokens.css` — every semantic token defined there is allowed; anything else is a violation. `references/allowed-customization.md` covers layout classes and props only.
