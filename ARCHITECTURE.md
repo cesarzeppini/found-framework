@@ -492,7 +492,7 @@ Lovable has no subagents. `tasks.md` marks which tasks are independent; a harnes
 Where it applies:
 
 - **Build — sequential.** Slices depend on each other and each gates on tests.
-- **Review — parallel.** a11y, security-audit, design-quality and design-system-guard all read the same diff independently.
+- **Review — parallel.** a11y, security-audit, compliance, design-quality and design-system-guard all read the same diff independently. Five checks; voice-guard is the sixth and runs at Ship, on the copy.
 - **Ship — parallel, the biggest win.** Changelog, blog, LinkedIn, Twitter, email and case study have no dependency on each other. One subagent per channel.
 
 Reviewer-checks-builder is a pairing, not parallelism: the builder finishes a slice, a separate subagent checks it, then the next slice starts.
