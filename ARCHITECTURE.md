@@ -453,6 +453,14 @@ Instead:
 
 Same two-stop model: skills improve every run, but every change — rule or note — passes the gate you're already standing at. The report marks each proposal approve/decline; approving applies it.
 
+### The doc states the conventions
+
+An approved skill change often introduces a **convention** the implementation then depends on — what a file is named, what a marker means, which exit code carries which meaning, where a threshold sits. Record it here, in the same commit as the change.
+
+This document is the input to build-order step 2, so a convention living only in a skill file is erased the next time that skill is regenerated from this doc. A follow-up commit isn't enough: the gap between the two is exactly where a regeneration would lose it.
+
+The scope is conventions, not decisions. **Design decisions stay with the human** — a skill records what it now depends on, and never rewrites this document's decisions to match itself. When the two genuinely disagree, that's a report item, not an edit.
+
 ## Portability
 
 The set has to run in Anthropic, Codex, Lovable, or whatever comes next. Four rules make that true.
