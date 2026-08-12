@@ -6,7 +6,7 @@ Working document. Everything here is a decision made so far, not a proposal. Edi
 
 ## What this is
 
-A pipeline that turns one written spec into a shipped feature plus every piece of collateral that feature earns — changelog, blog, social, email, portfolio — with a human gate before anything goes public.
+A pipeline that turns one written spec into a shipped feature plus every piece of collateral that feature earns — changelog, blog, social, email, case studies — with a human gate before anything goes public.
 
 Built in Claude Code first, but not built *for* it. Everything is plain markdown in harness-neutral folders, so the same set runs in Codex, Cowork, or anything else that reads skills. See Portability.
 
@@ -333,17 +333,21 @@ Not every change earns a blog post. DISTRIBUTION.md defines three tiers:
 |---|---|
 | Fix | changelog line |
 | Feature | changelog, email update, social posts |
-| Milestone | all of the above, plus blog post, case study, video script, portfolio entry |
+| Milestone | all of the above, plus blog post, case study, video script, build-in-public profile update |
 
 Plan already knows the size of what's being built, so it tags the tier. Ship produces exactly the intersection of tier and the channels DISTRIBUTION.md has switched on. No human deciding "is this blog-worthy" each time — the rule is written once per project.
 
-Possible outputs across tiers: changelog, blog post, case study, LinkedIn post, portfolio entry, Twitter post, YouTube video script, email update.
+Possible outputs across tiers: changelog, blog post, case study, LinkedIn post, build-in-public update, Twitter post, YouTube video script, email update.
+
+**One format, many destinations.** Some channels publish the same artifact to several places — a case study goes to the site, Dribbble, Clutch and Contra; a build-in-public update goes to whichever communities are joined. The artifact is written once and each destination gets trims and extra fields, never a separate piece of writing. CHANNELS.md holds each destination's mechanics; DISTRIBUTION.md toggles **per destination**, so a project can switch on Case Study → site only.
+
+Build-in-public has two distinct surfaces that are not interchangeable: the **project profile** (one-time, updated at milestones) and the **update post** (recurring, per feature). Only the update post is in the standard fan-out.
 
 All copy runs through `checks/voice-guard`.
 
 #### Predefined agents
 
-Ship is the one stage with fixed agents, one per channel: linkedin, twitter, blog, changelog, email, portfolio, video-script. They're identical every run — only the input changes — so defining them once costs nothing and drifts less than restating the instructions per feature.
+Ship is the one stage with fixed agents, one per channel: linkedin, twitter, blog, changelog, email, case-study, build-in-public, video-script. They're identical every run — only the input changes — so defining them once costs nothing and drifts less than restating the instructions per feature.
 
 Each is thin: point at the channel's section in BRAND.md and its mechanics in CHANNELS.md, state the output shape. The knowledge stays in context/; the agent file is a wrapper. Adding a channel is one small file plus a line in DISTRIBUTION.md.
 
@@ -353,7 +357,7 @@ The same logic covers a few other recurring jobs — the end-of-feature reviewer
 
 #### Branded artifacts — visualize
 
-Ship uses the vendored `skills/visualize/` (display-dev's skill, used as-is) for outputs that deserve form: the final report, and milestone-tier collateral like case studies and portfolio entries. Changelog lines and social posts stay plain text.
+Ship uses the vendored `skills/visualize/` (display-dev's skill, used as-is) for outputs that deserve form: the final report, and milestone-tier collateral like case studies. Changelog lines and social posts stay plain text.
 
 Setup, once per project: run visualize's `teach` step against the project. It walks the codebase and live site and writes its capture into a dedicated **Artifacts section of DESIGN.md** (plus tokens.css if missing) — so the skill gets exactly the input it was built to consume, and the hand-written parts of DESIGN.md stay separate from the taught parts. Re-run teach when the visual identity changes.
 
@@ -489,7 +493,7 @@ Where it applies:
 
 - **Build — sequential.** Slices depend on each other and each gates on tests.
 - **Review — parallel.** a11y, security-audit, design-quality and design-system-guard all read the same diff independently.
-- **Ship — parallel, the biggest win.** Changelog, blog, LinkedIn, Twitter, email and portfolio have no dependency on each other. One subagent per channel.
+- **Ship — parallel, the biggest win.** Changelog, blog, LinkedIn, Twitter, email and case study have no dependency on each other. One subagent per channel.
 
 Reviewer-checks-builder is a pairing, not parallelism: the builder finishes a slice, a separate subagent checks it, then the next slice starts.
 
