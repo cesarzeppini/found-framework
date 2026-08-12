@@ -70,7 +70,11 @@ out/
 
 When `checks/compliance` reports an affected document, draft the amendments: Privacy Policy, Terms of Service, Cookie Policy, GDPR/DPA records. Read the live text from the paths in `context/STACK.md`, and write against the jurisdiction it names.
 
-Four rules make this safe rather than reckless.
+**If a required document doesn't exist yet, draft it from scratch** rather than reporting its absence. A project whose feature just started collecting personal data needs a privacy policy more urgently than one that already has a stale clause — reporting the gap and stopping leaves it with nothing. STACK.md marking a document `none` means it doesn't exist, not that it isn't wanted. A document drafted from scratch is a full draft rather than a per-clause diff; name it `<document>.draft.md` so it can't be mistaken for an amendment to something already published.
+
+**This is not a channel and is not toggleable.** Legal never appears in DISTRIBUTION.md, and no project setting switches it off. It's triggered by the spec's compliance surface, not by distribution preferences — a feature that changes data retention gets its amendment drafted whether or not anyone remembered to enable something. Do not check DISTRIBUTION.md before drafting, and do not skip drafting because a channel is off; the tier × channel rule governs collateral, and this isn't collateral.
+
+**Automatic to draft, gated to publish.** Generation is unattended, exactly like every other Ship output. Only publication is held. Four rules keep that safe rather than reckless.
 
 **Diffs against the live text, never rewrites.** Amend the clauses that changed and leave the rest untouched. Each amendment names the triggering change beside it, so the reason is reviewable clause by clause. A regenerated policy is unreviewable — nobody can tell which of two hundred lines moved, and the wording that changed silently is exactly the one that mattered.
 
@@ -86,10 +90,11 @@ out/legal/
   terms-of-service.amendments.md
   cookie-policy.amendments.md
   dpa-records.amendments.md
+  cookie-policy.draft.md          a document that didn't exist — full draft
   legal-changelog.md              user-facing notice, plain language
 ```
 
-Where nothing is affected, `out/legal/` is absent and the manifest says the compliance check found no affected documents — the same distinction the manifest draws everywhere else between "not earned" and "failed."
+Where nothing is affected, `out/legal/` is absent and the manifest says the compliance check found no affected documents — the same distinction the manifest draws everywhere else between "not earned" and "failed." Absent because nothing was triggered, never because a switch was off.
 
 ### Where this stops
 

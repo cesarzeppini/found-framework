@@ -29,6 +29,8 @@ Turning on one destination of a multi-destination channel doesn't turn on the ot
 
 Adding a channel is one agent file in `agents/` plus a row here. Adding a *destination* to an existing channel is a row here plus its mechanics in CHANNELS.md — no new agent, since the artifact is already written.
 
+**Legal is not a channel — never add a row for it.** Privacy Policy, Terms, Cookie Policy and DPA amendments are triggered by the spec's compliance surface, not by distribution preferences, and no setting here switches them off. Ship drafts them automatically and holds them for individual approval. A row here would imply a project could opt out of noticing that it started collecting personal data.
+
 ## Tiers `[ask]`
 
 Plan tags every feature with a tier; these are the definitions it tags against. Adjust the *definitions* per project if the defaults don't fit — but keep the three tiers, since the skills reference them by name.
@@ -44,6 +46,8 @@ Plan tags every feature with a tier; these are the definitions it tags against. 
 Who reviews `out/` and approves publication. Name the person per channel where they differ — legal or client sign-off on some channels and not others is common, and it belongs here rather than in someone's memory.
 
 **The gate is between `out/` and publish.** Ship never publishes; it writes files and stops.
+
+Name a **legal approver** too, even though legal isn't a channel above. Amendments in `out/legal/` are drafted automatically and approved one by one — approving the run doesn't approve them — so someone has to be the person who says yes.
 
 ## Output format `[ask]`
 

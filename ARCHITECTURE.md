@@ -371,7 +371,11 @@ The gate is here — between out/ and publish, not inside Ship.
 
 #### Legal and compliance
 
-When `checks/compliance` reports an affected document, Ship drafts the amendments: Privacy Policy, Terms of Service, Cookie Policy, GDPR/DPA records. Four rules make this safe rather than reckless:
+When `checks/compliance` reports an affected document, Ship drafts the amendments: Privacy Policy, Terms of Service, Cookie Policy, GDPR/DPA records. If a required document doesn't exist yet, Ship drafts it from scratch rather than reporting its absence.
+
+**This is not a channel and is not toggleable.** It never appears in DISTRIBUTION.md, and no project setting can switch it off — it's triggered by the spec's compliance surface, not by distribution preferences. A feature that changes data retention gets a policy amendment drafted whether or not anyone remembered to enable something.
+
+**Automatic to draft, gated to publish.** The generation is unattended like every other Ship output; only publication is held. Four rules keep that safe rather than reckless:
 
 - **Diffs against the live text, never rewrites.** Each amendment names the triggering change beside it, so the reason is reviewable clause by clause.
 - **Drafts only.** Legal text is not a changelog. Where jurisdictional exposure is real, the output is explicitly marked as a draft for a lawyer, not a finished document. Automating legal copy without this is automating liability.
