@@ -36,4 +36,4 @@ BRAND.md and DESIGN.md both sound like "brand". Line one of each states the boun
 Two files are consumed by scripts, so their structure is load-bearing:
 
 - `BRAND.md` — the **banned words table** is parsed by `scripts/prose-lint.mjs`. It needs a heading containing "banned" followed by a `| word | why | use instead |` table.
-- `STACK.md` — the **registry** key is read by `design-system-guard`. `tokens.css` is parsed for the token allowlist.
+- `STACK.md` — the **`components:`** key is read by `design-system-guard`, which builds its approved list from `@approved` markers in those files. `tokens.css` is parsed for the token allowlist.

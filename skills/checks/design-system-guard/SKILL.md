@@ -1,21 +1,41 @@
 ---
 name: design-system-guard
-description: Runs at the end of every slice that touches UI, and once more across the full diff at review. Verifies every component used comes from the approved design system registry (path defined in context/STACK.md), auto-fixes raw HTML, hardcoded colors, and unauthorized style overrides, and parks ambiguous cases for the final report — it never halts the run. Triggers on UI/component work, styling changes, and new pages or sections.
+description: Runs at the end of every slice that touches UI, and once more across the full diff at review. Verifies every component used carries an @approved marker in its own file (component directory defined in context/STACK.md; only a human adds the marker), auto-fixes raw HTML, hardcoded colors, and unauthorized style overrides, and parks ambiguous cases for the final report — it never halts the run. Triggers on UI/component work, styling changes, and new pages or sections.
 ---
 
 # Design system guard
 
 Run this check at the end of every slice that touches UI, and once more across the whole diff at review. Its purpose is to keep every rendered element an instance of the approved design system instead of a one-off — drift is cheap to introduce and expensive to unwind once it spreads across pages.
 
-## The registry
+## Approved components
 
-The registry path is defined in `context/STACK.md` (key: `registry`) — typically a human-curated page that renders every approved component, like `/design`, or a Storybook index. A component is approved only if it is imported and rendered there. Read that file at check time to build the approved list — never hardcode a list, and never treat `src/components/ui/*` as the registry. That folder can accumulate components nobody asked for; the registry is the deliberate, human-reviewed surface.
+**A component is approved when its own file carries an `@approved` marker in a comment in the first few lines.** Nothing else confers approval — not living in the components directory, not being imported somewhere, not looking finished.
+
+```tsx
+// @approved
+export const Button = ...
+```
+
+Any comment syntax the file uses is fine (`//`, `/* */`, `{/* */}`, `#`), as long as the marker is near the top where a human reading the file sees it immediately.
+
+Build the approved list at check time by scanning the component directory — `components:` in `context/STACK.md`, defaulting to `src/components/ui`. Never hardcode a list.
+
+### Agents never add the marker
+
+**Only the human decides what is approved.** An agent may add `@approved` when — and only when — the human asks for it in that moment ("mark Button as approved"). Never on its own initiative.
+
+That means never during a pipeline run, never as the fix for a parked item, never because a component looks finished or well-built, never bundled into a skill proposal, and never "while I'm in the file anyway."
+
+The reason is the whole point of the check: an agent that can mark components approved is an agent that approves whatever it invented, and the guard becomes a mirror. The marker is the trust boundary — a human put it there, or it isn't approval.
+
+If a slice needs an unapproved component, that is a parked item, not a reason to reach for the marker.
 
 Consequences:
 
-- Component in `src/components/ui` but not in the registry → park it: note whether it should be added to the registry or replaced with an approved component. Do not use it silently, do not decide silently.
+- Component used but its file has no `@approved` marker → park it: note whether it should be marked (a question for the human) or replaced with an approved component. Do not use it silently, do not decide silently.
 - Slice genuinely needs a component that does not exist yet → park it with the closest existing match named. The final report carries the question.
-- Registry file missing or STACK.md has no `registry` key → report it as a finding and fall back to flagging only mechanical violations. Never invent a registry.
+- Component directory missing, or STACK.md has no `components:` key → report it as a finding and fall back to flagging only mechanical violations.
+- **No component carries the marker yet** → report that plainly. Everything is unapproved, which is the correct reading of a project that hasn't approved anything, not a reason to assume the check is misconfigured.
 
 ## Tokens
 
@@ -26,7 +46,7 @@ The color/token allowlist is not maintained by hand. Derive it at check time fro
 | # | Violation | Examples |
 | --- | --- | --- |
 | 1 | Raw HTML for core UI | `<button>`, `<input>`, `<select>`, `<textarea>`, hand-rolled card / modal / dropdown / tab `<div>` structures |
-| 2 | Off-system component | local component duplicating something on `/design`; component in `src/components/ui` absent from `/design` |
+| 2 | Off-system component | local component duplicating an `@approved` one; component in the components directory with no `@approved` marker |
 | 3 | Unauthorized customization | color / font / border / shadow / radius overrides on a design-system component, raw hex or `rgb()` values, non-token utilities like `bg-white` `text-black` `text-[#333]`, `!important` |
 
 Plain layout wrappers (`<div>`, `<section>`, `<span>`, `<ul>`) are fine. The rule targets interactive controls and visual surfaces, not structure.
@@ -42,7 +62,7 @@ Run this skill's own `skills/checks/design-system-guard/scripts/ds-lint.sh` on t
 - raw `<button>` → `Button` with the matching variant
 - raw `<input>` / `<textarea>` → `Input` / `Textarea`
 - hex or non-token color utility → the semantic token that matches (`bg-primary`, `text-muted-foreground`, `border-border`)
-- duplicate local component with an exact registry equivalent → the registry component
+- duplicate local component with an exact `@approved` equivalent → the approved component
 
 **Do not touch — park instead** when intent is unclear: a custom component with no close equivalent, an override that looks deliberate (a brand-specific surface, a one-off marketing treatment), or a genuinely new component need. Guessing here either destroys intentional work or silently approves drift. Parked items don't halt the slice — they go in the report block and surface in the final report next to the screenshots.
 
@@ -60,7 +80,7 @@ Fixed (3)
   src/components/Row.tsx:12    bg-white -> bg-card
 Parked (1)
   src/components/StatTile.tsx:8  custom card surface, closest match: Card
-  -> Replace with Card, or approve StatTile and add it to the registry?
+  -> Replace with Card, or mark StatTile @approved? (a human's call, never mine)
 ```
 
 Parked items never halt the run. They accumulate into the final report for the human gate. The full-diff pass at review re-checks them: some resolve themselves (the component got replaced in a later slice); the rest stay listed.

@@ -30,7 +30,7 @@ Durations, easing, what animates and what doesn't. Reduced-motion behaviour.
 
 How the design system is applied in practice: which variants exist for the common components, which combinations are approved, what's deliberately absent.
 
-The authoritative list is the registry in STACK.md. This section is intent, not inventory.
+The authoritative list is whichever components carry an `@approved` marker — see STACK.md. This section is intent, not inventory.
 
 ## Iconography and imagery `[ask]`
 

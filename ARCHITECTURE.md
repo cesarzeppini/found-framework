@@ -108,7 +108,7 @@ This file is what stops the pipeline building bulletproof scalable infrastructur
 
 **DESIGN.md** + **tokens.css** — the visual identity. Colors, typography, radius, spacing, elevation. Tokens are machine-readable; tokens.css is the source of truth and DESIGN.md mirrors it.
 
-**STACK.md** — the standing technical facts of this project. Scaffolded in Lovable, Supabase, Supabase Auth, RLS applied, moved to GitHub, refined in Claude Code. Also: pointer to the component registry, which checks are enabled, baseline security rules for this stack, where the legal documents live in the repo, and the jurisdiction they're written for. A legal document the project doesn't have is recorded as `none` — meaning it doesn't exist yet, not that it's unwanted, so a feature that requires it gets it drafted rather than skipped.
+**STACK.md** — the standing technical facts of this project. Scaffolded in Lovable, Supabase, Supabase Auth, RLS applied, moved to GitHub, refined in Claude Code. Also: where the design system's components live (approval itself is a per-file `@approved` marker), which checks are enabled, baseline security rules for this stack, where the legal documents live in the repo, and the jurisdiction they're written for. A legal document the project doesn't have is recorded as `none` — meaning it doesn't exist yet, not that it's unwanted, so a feature that requires it gets it drafted rather than skipped.
 
 STACK.md changes what the spec has to ask about. If Supabase Auth is already in place, "session handling must be production-grade" is satisfied by default and the spec skill doesn't need to raise it.
 
@@ -420,7 +420,7 @@ Standing defaults, so they don't get reinvented per skill:
 
 ### design-system-guard
 
-Already written and updated (v2). Enforces that every interface uses only approved components, only approved tokens and variants, no hardcoded values, no components invented on the spot, nothing pulled from Tailwind's default palette or shadcn directly. Registry path comes from STACK.md, token allowlist derives from tokens.css, runs per UI slice plus full-diff at review, parks instead of halting.
+Already written and updated (v2). Enforces that every interface uses only approved components, only approved tokens and variants, no hardcoded values, no components invented on the spot, nothing pulled from Tailwind's default palette or shadcn directly. Approval is a marker, not a page: a component is approved when its own file carries `@approved` in a comment in the first few lines, and the guard builds its list by scanning the component directory (`components:` in STACK.md). **Only the human adds that marker** — an agent may add it when asked to in the moment, never on its own initiative, because an agent that can approve its own components turns the check into a mirror. Token allowlist derives from tokens.css, runs per UI slice plus full-diff at review, parks instead of halting.
 
 ### voice-guard
 
@@ -515,7 +515,7 @@ Deliberately not taking: the multi-harness compile step (symlinks and a shared R
 
 1. ~~How the cross-harness review actually runs~~ — resolved: MCP link between harnesses, with same-harness fallback. Needs verifying against current Codex MCP support.
 2. **Does BRAND.md hold positioning and messaging, or does that get its own file.** Currently in BRAND.md, which risks making it the drawer everything goes in.
-3. **COMPANY.md review cadence.** Stale numbers mean the minimum-viable rule calibrates against a company that no longer exists. Planned fix: a small `doctor` maintenance verb (pattern from Impeccable's doctor) that checks context files against reality — user counts, stack facts, registry path — and reports drift instead of silently trusting stale files. Build it after the pipeline works, not before.
+3. **COMPANY.md review cadence.** Stale numbers mean the minimum-viable rule calibrates against a company that no longer exists. Planned fix: a small `doctor` maintenance verb (pattern from Impeccable's doctor) that checks context files against reality — user counts, stack facts, component paths — and reports drift instead of silently trusting stale files. Build it after the pipeline works, not before.
 4. **First pilot project and feature.** The framework is project-agnostic — clients, your own products, anything. Pick one project and one small feature for the first end-to-end run.
 
 ---

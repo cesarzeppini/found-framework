@@ -47,7 +47,9 @@ Running in Codex instead? `found/AGENTS.md` ships with an unfilled capability ti
 
 This produces `context/` — the project's facts. Everything downstream calibrates against it, so answer the interview honestly, especially COMPANY.md's team size and user numbers: they're what stop the pipeline building infrastructure for forty users that a team of two then maintains.
 
-Three fields are read by scripts and worth getting right: STACK.md's `registry` path, STACK.md's `jurisdiction`, and BRAND.md's banned-words table.
+Three fields are read by scripts and worth getting right: STACK.md's `components` path, STACK.md's `jurisdiction`, and BRAND.md's banned-words table.
+
+Approving a component is a separate, deliberate act: put `// @approved` at the top of its file. Say "mark X as approved" and Claude Code adds it — it never does that on its own, since a pipeline that can approve its own components isn't checking anything.
 
 **2 — Write a spec.**
 

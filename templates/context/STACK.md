@@ -26,17 +26,21 @@ Test runner, how the suite is invoked, where tests live, what "the full suite" m
 
 If any of these is missing, standing it up is a Stage 0 task — the slice gates have nothing to run otherwise.
 
-## Registry `[ask]`
+## Approved components `[ask]`
 
-> **Read by `design-system-guard`.** Keep the `registry:` key and give it a real path.
+> **Read by `design-system-guard`.** Keep the `components:` key and give it a real path.
 
 ```
-registry: <path or route, e.g. /design or .storybook>
+components: <path, e.g. src/components/ui>
 ```
 
-The human-curated surface that renders every approved component. A component is approved only if it's imported and rendered there.
+Where the design system's components live. Living there is not approval.
 
-Not a components directory. That folder accumulates things nobody approved; the registry is the deliberate, reviewed surface. Guard parks anything it finds outside it rather than guessing.
+**A component is approved when its own file carries an `@approved` marker in a comment in the first few lines** — that marker is the entire registry. The guard scans this directory, treats marked files as the approved list, and parks every use of an unmarked one.
+
+**Only a human adds the marker.** Agents may add it when explicitly asked to in the moment ("mark Button as approved") and never on their own initiative — not during a run, not as a fix for a parked item, not because a component looks done. An agent that can approve its own components turns the check into a mirror.
+
+Expect everything to be unapproved on a new project. That is the correct starting state; mark components as they're actually reviewed.
 
 ## Checks enabled `[ask]`
 

@@ -15,18 +15,23 @@ if [ ${#TARGETS[@]} -eq 0 ]; then
 fi
 
 if command -v rg >/dev/null 2>&1; then
-  GREP() { rg -n --no-heading -g '*.tsx' -g '*.jsx' -g '!*/ui/*' -g '!*design.tsx' "$@"; }
+  GREP() { rg -n --no-heading -g '*.tsx' -g '*.jsx' -g '!*/ui/*' "$@"; }
 else
   GREP() { pat="$1"; shift; grep -rniE --include='*.tsx' --include='*.jsx' -n "$pat" "$@"; }
 fi
 
 
+# Where the design system's components live. Approval is not location — it is the
+# @approved marker inside each file (see below). Resolved here because report()
+# uses it to skip the components' own sources.
+COMPONENTS_DIR=$(grep -m1 -E '^components:' context/STACK.md 2>/dev/null | sed -E 's/^components:[[:space:]]*//')
+[ -z "${COMPONENTS_DIR:-}" ] && COMPONENTS_DIR="src/components/ui"
+
 HITS=0
 report() { # label pattern
   local label="$1" pat="$2" out
   out=$(GREP -e "$pat" "${TARGETS[@]}" 2>/dev/null \
-        | grep -v '/components/ui/' \
-        | grep -v 'routes/design' || true)
+        | awk -F: -v dir="$COMPONENTS_DIR" '$1 !~ dir' || true)
   if [ -n "$out" ]; then
     echo "== $label"
     echo "$out"
@@ -42,31 +47,44 @@ report "raw interactive HTML element" '<(button|input|select|textarea)[[:space:]
 report "inline style attribute" 'style=\{\{'
 report "important override" 'className="[^"]*![a-z-]'
 
-# Components imported from ui/ that are not rendered on the registry page.
-# Registry path comes from context/STACK.md (line like: registry: src/routes/design.tsx)
-DESIGN_PAGE=$(grep -m1 -E '^registry:' context/STACK.md 2>/dev/null | sed -E 's/^registry:[[:space:]]*//')
-[ -n "${DESIGN_PAGE:-}" ] && [ ! -f "$DESIGN_PAGE" ] && DESIGN_PAGE=""
-[ -z "${DESIGN_PAGE:-}" ] && DESIGN_PAGE=$(ls src/routes/design.tsx src/routes/design/index.tsx 2>/dev/null | head -1)
-if [ -n "${DESIGN_PAGE:-}" ]; then
-  APPROVED=$(grep -oE 'from "@/components/ui/[a-z-]+"' "$DESIGN_PAGE" 2>/dev/null \
-             | sed -E 's|.*/([a-z-]+)"|\1|' | sort -u)
+# Approved components carry an @approved marker in a comment in the first few
+# lines of their own file. A human puts it there; this script only reads it.
+if [ -d "$COMPONENTS_DIR" ]; then
+  APPROVED=""
+  while IFS= read -r f; do
+    if head -5 "$f" 2>/dev/null | grep -qE '(^|[[:space:]/*#{])@approved([[:space:]]|$)'; then
+      base=$(basename "$f"); base="${base%.*}"
+      APPROVED+="$base"$'\n'
+    fi
+  done < <(find "$COMPONENTS_DIR" -type f \( -name '*.tsx' -o -name '*.jsx' -o -name '*.ts' \) 2>/dev/null)
+  APPROVED=$(printf '%s' "$APPROVED" | sort -u)
+
+  if [ -z "$APPROVED" ]; then
+    echo "== no component in $COMPONENTS_DIR carries an @approved marker"
+    echo "   Every component below is therefore unapproved. If that looks wrong, a human"
+    echo "   marks components — agents never add @approved on their own initiative."
+    echo
+  fi
+
   UNAPPROVED=""
   while IFS= read -r line; do
     file="${line%%:*}"
-    mod=$(printf '%s' "$line" | sed -E 's|.*/components/ui/([a-z-]+)".*|\1|')
+    mod=$(printf '%s' "$line" | sed -E 's|.*/components/ui/([a-zA-Z0-9-]+)".*|\1|')
     if ! printf '%s\n' "$APPROVED" | grep -qx "$mod"; then
       UNAPPROVED+="$file  ->  @/components/ui/$mod"$'\n'
     fi
-  done < <(grep -rEn 'from "@/components/ui/[a-z-]+"' --include='*.tsx' "${TARGETS[@]}" 2>/dev/null \
-           | grep -v '/components/ui/' | grep -v 'routes/design' || true)
+  # Exclude by FILE path only — the import path also contains /components/ui/,
+  # so filtering the whole line would drop every hit.
+  done < <(grep -rEn 'from "@/components/ui/[a-zA-Z0-9-]+"' --include='*.tsx' --include='*.jsx' "${TARGETS[@]}" 2>/dev/null \
+           | awk -F: -v dir="$COMPONENTS_DIR" '$1 !~ dir' || true)
   if [ -n "$UNAPPROVED" ]; then
-    echo "== component used but not present on /design"
+    echo "== component used but not marked @approved"
     printf '%s' "$UNAPPROVED" | sort -u
     echo
     HITS=1
   fi
 else
-  echo "== registry page not found (set registry: in context/STACK.md) — cannot be verified"
+  echo "== component directory not found (set components: in context/STACK.md) — approval cannot be verified"
   echo
   HITS=1
 fi
