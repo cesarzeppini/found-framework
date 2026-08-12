@@ -52,9 +52,10 @@ found/
     channel-blog.md
     channel-email.md
     ...
-  scripts/
+  scripts/                 shared scripts; a check's own script lives with the check
     prose-lint.mjs
     screenshots.mjs
+    spec-no-code.mjs
   templates/
     context/             one template per context file — headers, a line per
                          section on what belongs there, and markers for what is
@@ -406,6 +407,10 @@ Not stages. Invoked by stages.
 | design-quality | end of feature | no, advisory |
 
 Each check follows the same shape: a deterministic script for what machines catch, written judgment for what they can't, an explicit "park, don't guess" rule, and a fixed report format.
+
+**Detector scripts are Node (`.mjs`), never shell.** design-system-guard's linter was shell first and shipped four bugs of kinds that only exist there — a glob pair failing when one side missed, a `sed` delimiter colliding with data containing `|`, a file-path prefix leaking into a pattern match, and `grep -i` applying in one branch but not the other. Each produced a *silent* wrong answer rather than an error, which is the worst failure mode for a check. Scripts use only the Node standard library, so there is nothing to install.
+
+A detector with non-trivial logic keeps tests beside it (`<name>.test.mjs`, run with `node --test`), and every test corresponds to a bug that check actually shipped or a rule it depends on.
 
 Exceptions, deliberate: `security-audit`, `compliance` and `design-quality` are judgment-only, with no script. A detector for these would produce confident false negatives on exactly the cases they exist to catch — the free-text field that collects personal data without being named for it. The one narrow exception is compliance's dependency signal: new packages and new third-party network calls are reliably detectable and map straight to "new processor" and "new tracker," so a script flags those and feeds the judgment layer. It never decides.
 

@@ -1,0 +1,245 @@
+// Tests for ds-lint.mjs. Run: node --test skills/checks/design-system-guard/scripts/
+//
+// Every case here corresponds to a bug the shell version actually shipped, or to a
+// rule the guard depends on. They build a throwaway project in a temp directory and
+// run the real script against it — no mocking, since the bugs were all in how the
+// script read a real filesystem.
+
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { execFileSync } from 'node:child_process';
+
+const SCRIPT = join(dirname(fileURLToPath(import.meta.url)), 'ds-lint.mjs');
+
+function project(files) {
+  const root = mkdtempSync(join(tmpdir(), 'ds-lint-'));
+  for (const [path, body] of Object.entries(files)) {
+    const full = join(root, path);
+    mkdirSync(dirname(full), { recursive: true });
+    writeFileSync(full, body);
+  }
+  return root;
+}
+
+function run(root, args = []) {
+  try {
+    const stdout = execFileSync('node', [SCRIPT, ...args], { cwd: root, encoding: 'utf8' });
+    return { code: 0, out: stdout };
+  } catch (err) {
+    return { code: err.status, out: (err.stdout || '') + (err.stderr || '') };
+  }
+}
+
+const BASE = {
+  'context/STACK.md': 'components: src/components/ui, src/components/app\n',
+  'src/components/ui/button.tsx': '// @approved\nexport const Button = () => null;\n',
+  'src/components/ui/popover.tsx': 'export const Popover = () => null;\n',
+  'src/components/app/stat-tile.tsx': '/* @approved */\nexport const StatTile = () => null;\n',
+};
+
+test('flags unmarked components across every configured directory', () => {
+  const root = project({
+    ...BASE,
+    'src/components/app/chart.tsx': 'export const Chart = () => null;\n',
+    // ~/ alias, not @/ — the shell version hardcoded @/components/ui/ and saw none of this
+    'src/routes/page.tsx': [
+      'import { Button } from "~/components/ui/button";',
+      'import { Popover } from "~/components/ui/popover";',
+      'import { StatTile } from "~/components/app/stat-tile";',
+      'import { Chart } from "~/components/app/chart";',
+    ].join('\n'),
+  });
+  const { code, out } = run(root, ['src/routes']);
+  assert.equal(code, 1);
+  assert.match(out, /components\/ui\/popover/);
+  assert.match(out, /components\/app\/chart/);
+  assert.doesNotMatch(out, /components\/ui\/button/);
+  assert.doesNotMatch(out, /components\/app\/stat-tile/);
+  rmSync(root, { recursive: true, force: true });
+});
+
+test('relative import specifiers resolve like aliased ones', () => {
+  const root = project({
+    ...BASE,
+    'src/routes/rel.tsx': 'import { Popover } from "../../components/ui/popover";\n',
+  });
+  const { out } = run(root, ['src/routes']);
+  assert.match(out, /components\/ui\/popover/);
+  rmSync(root, { recursive: true, force: true });
+});
+
+test('marker must sit within the first 5 lines', () => {
+  const inWindow = project({
+    ...BASE,
+    'src/components/ui/popover.tsx': '// @approved\nexport const Popover = () => null;\n',
+    'src/routes/page.tsx': 'import { Popover } from "~/components/ui/popover";\n',
+  });
+  assert.doesNotMatch(run(inWindow, ['src/routes']).out, /components\/ui\/popover/);
+  rmSync(inWindow, { recursive: true, force: true });
+
+  const outOfWindow = project({
+    ...BASE,
+    'src/components/ui/popover.tsx': '\n\n\n\n\n// @approved\nexport const Popover = () => null;\n',
+    'src/routes/page.tsx': 'import { Popover } from "~/components/ui/popover";\n',
+  });
+  assert.match(run(outOfWindow, ['src/routes']).out, /components\/ui\/popover/);
+  rmSync(outOfWindow, { recursive: true, force: true });
+});
+
+test('reports component directories missing from components:', () => {
+  const root = project({
+    'context/STACK.md': 'components: src/components/ui\n',
+    'src/components/ui/button.tsx': '// @approved\nexport const Button = () => null;\n',
+    'src/components/app/chart.tsx': 'export const Chart = () => null;\n',
+    'src/components/icons/star.tsx': 'export const Star = () => null;\n',
+  });
+  const { code, out } = run(root, ['src']);
+  assert.equal(code, 1);
+  assert.match(out, /not listed in components:/);
+  assert.match(out, /src\/components\/app/);
+  assert.match(out, /src\/components\/icons/);
+  rmSync(root, { recursive: true, force: true });
+});
+
+test('components-ignore silences a deliberate exclusion', () => {
+  const root = project({
+    'context/STACK.md':
+      'components: src/components/ui\ncomponents-ignore: src/components/app, src/components/icons\n',
+    'src/components/ui/button.tsx': '// @approved\nexport const Button = () => null;\n',
+    'src/components/app/chart.tsx': 'export const Chart = () => null;\n',
+    'src/components/icons/star.tsx': 'export const Star = () => null;\n',
+  });
+  assert.doesNotMatch(run(root, ['src']).out, /not listed in components:/);
+  rmSync(root, { recursive: true, force: true });
+});
+
+test('registry splits approved, unmarked-in-use, and unmarked-unimported', () => {
+  const root = project({
+    ...BASE,
+    'src/components/app/chart.tsx': 'export const Chart = () => null;\n',
+    'src/components/ui/ghost.tsx': 'export const Ghost = () => null;\n',
+    'src/routes/page.tsx': [
+      'import { Button } from "~/components/ui/button";',
+      'import { Chart } from "~/components/app/chart";',
+    ].join('\n'),
+    'src/routes/other.tsx': 'import { Chart } from "~/components/app/chart";\n',
+  });
+  const { code, out } = run(root, ['--registry', 'src']);
+  assert.equal(code, 0);
+  assert.match(out, /Approved \(2\)/);
+  assert.match(out, /components\/app\/chart\s+used in 2 file\(s\)/);
+  assert.match(out, /Unmarked and unimported: 2 file\(s\)/); // popover + ghost, count only
+  assert.doesNotMatch(out, /ghost/); // counted, never listed
+  rmSync(root, { recursive: true, force: true });
+});
+
+test('a component imported only by another component counts as in use', () => {
+  // The shell version returned the importing file's OWN key here, because it matched
+  // the path prefix rather than the line content.
+  const root = project({
+    ...BASE,
+    'src/components/ui/button.tsx':
+      '// @approved\nimport { Popover } from "~/components/ui/popover";\nexport const Button = () => null;\n',
+  });
+  const { out } = run(root, ['--registry', 'src']);
+  assert.match(out, /components\/ui\/popover\s+used in 1 file\(s\)/);
+  assert.doesNotMatch(out, /components\/ui\/button\s+used in/); // button is approved, not "in use"
+  rmSync(root, { recursive: true, force: true });
+});
+
+test('mechanical violations are case-sensitive: <button> hits, <Button> does not', () => {
+  const root = project({
+    ...BASE,
+    'src/routes/raw.tsx': 'export default () => <button>x</button>;\n',
+    'src/routes/ok.tsx': 'export default () => <Button>x</Button>;\n',
+  });
+  const { out } = run(root, ['src/routes']);
+  assert.match(out, /raw interactive HTML element/);
+  assert.match(out, /raw\.tsx/);
+  assert.doesNotMatch(out, /ok\.tsx/);
+  rmSync(root, { recursive: true, force: true });
+});
+
+test('hardcoded colors and arbitrary values are flagged', () => {
+  const root = project({
+    ...BASE,
+    'src/routes/style.tsx':
+      'export default () => <div className="bg-white text-[#333]" style={{color:"red"}}/>;\n',
+  });
+  const { code, out } = run(root, ['src/routes']);
+  assert.equal(code, 1);
+  assert.match(out, /non-token color utility/);
+  assert.match(out, /arbitrary-value utility/);
+  assert.match(out, /inline style attribute/);
+  rmSync(root, { recursive: true, force: true });
+});
+
+test('reports plainly when nothing carries a marker', () => {
+  const root = project({
+    'context/STACK.md': 'components: src/components/ui\n',
+    'src/components/ui/button.tsx': 'export const Button = () => null;\n',
+    'src/routes/page.tsx': 'import { Button } from "~/components/ui/button";\n',
+  });
+  const { out } = run(root, ['src/routes']);
+  assert.match(out, /no component in src\/components\/ui carries an @approved marker/);
+  assert.match(out, /first 5 lines/);
+  rmSync(root, { recursive: true, force: true });
+});
+
+test('missing component directory is a finding, not a crash', () => {
+  const root = project({
+    'context/STACK.md': 'components: src/nope\n',
+    'src/routes/page.tsx': 'export default () => null;\n',
+  });
+  const { code, out } = run(root, ['src/routes']);
+  assert.equal(code, 1);
+  assert.match(out, /component directory not found/);
+  rmSync(root, { recursive: true, force: true });
+});
+
+test('clean project exits 0', () => {
+  const root = project({
+    'context/STACK.md': 'components: src/components/ui\n',
+    'src/components/ui/button.tsx': '// @approved\nexport const Button = () => null;\n',
+    'src/routes/page.tsx': 'import { Button } from "~/components/ui/button";\n',
+  });
+  const { code, out } = run(root, ['src/routes']);
+  assert.equal(code, 0);
+  assert.match(out, /Design system check: clean/);
+  rmSync(root, { recursive: true, force: true });
+});
+
+test('--added-markers finds markers introduced in a range', () => {
+  const root = project({
+    'context/STACK.md': 'components: src/components/ui\n',
+    'src/components/ui/button.tsx': 'export const Button = () => null;\n',
+  });
+  const git = (...args) =>
+    execFileSync('git', args, {
+      cwd: root,
+      encoding: 'utf8',
+      env: { ...process.env, GIT_AUTHOR_NAME: 't', GIT_AUTHOR_EMAIL: 't@t', GIT_COMMITTER_NAME: 't', GIT_COMMITTER_EMAIL: 't@t' },
+    });
+  git('init', '-q', '-b', 'main');
+  git('add', '-A');
+  git('commit', '-qm', 'base');
+
+  const none = run(root, ['--added-markers', 'main...HEAD']);
+  assert.equal(none.code, 0);
+  assert.match(none.out, /No @approved markers added/);
+
+  git('checkout', '-qb', 'feat');
+  writeFileSync(join(root, 'src/components/ui/button.tsx'), '// @approved\nexport const Button = () => null;\n');
+  git('add', '-A');
+  git('commit', '-qm', 'approve button');
+
+  const added = run(root, ['--added-markers', 'main...HEAD']);
+  assert.equal(added.code, 1);
+  assert.match(added.out, /markers added in main\.\.\.HEAD/);
+  assert.match(added.out, /button\.tsx/);
+  rmSync(root, { recursive: true, force: true });
+});

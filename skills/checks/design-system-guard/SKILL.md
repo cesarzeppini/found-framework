@@ -51,7 +51,7 @@ Any `@approved` marker that appears in the run's diff goes into the final report
 Don't rely on self-reporting for this. The full-diff pass at review detects them mechanically:
 
 ```bash
-skills/checks/design-system-guard/scripts/ds-lint.sh --added-markers main...HEAD
+skills/checks/design-system-guard/scripts/ds-lint.mjs --added-markers main...HEAD
 ```
 
 Every marker it finds is reported, whether or not any stage mentioned adding one. A marker in the diff that no stage reported is itself the finding.
@@ -68,7 +68,7 @@ Consequences:
 Once per run, produce the inventory that becomes the report's **Component registry** section:
 
 ```bash
-skills/checks/design-system-guard/scripts/ds-lint.sh --registry src
+skills/checks/design-system-guard/scripts/ds-lint.mjs --registry src
 ```
 
 Three groups, and the split is the point:
@@ -101,7 +101,9 @@ Allowed customization is narrow: approved `variant` / `size` props plus layout c
 
 ## Fix or ask
 
-Run this skill's own `skills/checks/design-system-guard/scripts/ds-lint.sh` on the files the task touched to get the mechanical hits, then apply judgment to the rest. (The framework's shared scripts live in the repo-root `scripts/`; this one is the skill's.)
+Run this skill's own `skills/checks/design-system-guard/scripts/ds-lint.mjs` on the files the task touched to get the mechanical hits, then apply judgment to the rest. (The framework's shared scripts live in the repo-root `scripts/`; this one is the skill's.)
+
+Its tests live beside it — `node --test skills/checks/design-system-guard/scripts/ds-lint.test.mjs`. Run them after changing the script: every case in there is a bug this check actually shipped.
 
 **Fix immediately** when the correct replacement is unambiguous:
 
