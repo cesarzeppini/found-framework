@@ -46,6 +46,6 @@ Icon set, stroke weight, sizing. Illustration or photography style, if any.
 
 Run teach once per project, and again whenever the visual identity changes. It walks the codebase and the live site and writes its capture here, plus `tokens.css` if that file is missing.
 
-Ship reads this section when producing branded artifacts — the final report, and milestone collateral like case studies and portfolio entries.
+Ship reads this section when producing branded artifacts — the final report, and milestone collateral like case studies.
 
 `<teach output goes here>`

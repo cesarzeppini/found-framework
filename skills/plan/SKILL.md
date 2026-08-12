@@ -60,7 +60,7 @@ Tag the whole feature **fix**, **feature**, or **milestone**. Plan knows the siz
 |---|---|
 | fix | A defect or a small correction. Changelog line only. |
 | feature | New user-visible capability. Changelog, email, social. |
-| milestone | A release users would notice and talk about. Everything, plus blog, case study, video script, portfolio. |
+| milestone | A release users would notice and talk about. Everything, plus blog, **case study**, video script, build-in-public profile update. |
 
 Tag honestly. Inflating a fix into a milestone produces collateral with nothing to say, and the voice-guard pass can't rescue a post about a bug fix that claims to be a launch.
 

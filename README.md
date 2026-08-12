@@ -1,6 +1,6 @@
 # Found
 
-A pipeline that turns one written spec into a shipped feature plus the collateral it earns — changelog, blog, social, email, portfolio — with a human gate before anything goes public.
+A pipeline that turns one written spec into a shipped feature plus the collateral it earns — changelog, blog, social, email, case study — with a human gate before anything goes public.
 
 You approve a spec. The pipeline plans it, builds it in tested vertical slices, reviews it in a second harness, writes the collateral, and hands back one report. **Two human stops: the spec at the start, the gate at the end.** Nothing in between asks you anything — ambiguity gets decided, logged, and surfaced in the report.
 
