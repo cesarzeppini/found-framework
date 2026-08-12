@@ -70,7 +70,7 @@ out/
 
 When `checks/compliance` reports an affected document, draft the amendments: Privacy Policy, Terms of Service, Cookie Policy, GDPR/DPA records. Read the live text from the paths in `context/STACK.md`, and write against the jurisdiction it names.
 
-**If a required document doesn't exist yet, draft it from scratch** rather than reporting its absence. A project whose feature just started collecting personal data needs a privacy policy more urgently than one that already has a stale clause — reporting the gap and stopping leaves it with nothing. STACK.md marking a document `none` means it doesn't exist, not that it isn't wanted. A document drafted from scratch is a full draft rather than a per-clause diff; name it `<document>.draft.md` so it can't be mistaken for an amendment to something already published.
+**If a required document doesn't exist yet, draft it from scratch** rather than reporting its absence. A project whose feature just started collecting personal data needs a privacy policy more urgently than one that already has a stale clause — reporting the gap and stopping leaves it with nothing.
 
 **This is not a channel and is not toggleable.** Legal never appears in DISTRIBUTION.md, and no project setting switches it off. It's triggered by the spec's compliance surface, not by distribution preferences — a feature that changes data retention gets its amendment drafted whether or not anyone remembered to enable something. Do not check DISTRIBUTION.md before drafting, and do not skip drafting because a channel is off; the tier × channel rule governs collateral, and this isn't collateral.
 
@@ -90,17 +90,16 @@ out/legal/
   terms-of-service.amendments.md
   cookie-policy.amendments.md
   dpa-records.amendments.md
-  cookie-policy.draft.md          a document that didn't exist — full draft
   legal-changelog.md              user-facing notice, plain language
 ```
 
 Where nothing is affected, `out/legal/` is absent and the manifest says the compliance check found no affected documents — the same distinction the manifest draws everywhere else between "not earned" and "failed." Absent because nothing was triggered, never because a switch was off.
 
-### Where this stops
+### Legal documents are just pages
 
-Drafting an amendment is Ship's job. **Storing, versioning and publishing it is not** — that belongs in the project's own codebase, as a feature the pipeline can build like any other.
+Markdown, or whatever the project already uses. Approving a draft means replacing the file and updating its effective date — that's the whole publication step.
 
-Hold that line, because the alternative is the first run that touches a privacy policy trying to build a legal CMS as part of shipping an unrelated feature. If a project needs versioned legal records, that is its own spec and its own run. Approved amendments from `out/legal/` then feed it as the next pending version, rather than a file someone pastes into a CMS by hand.
+**No database, no versioning, no status lifecycle, no admin UI, no cascade.** Git history is the version record. Don't build any of that, and don't propose it as follow-up work: a privacy policy is a page, and treating it as a records system is how an unrelated feature turns into a CMS build.
 
 ## What Ship hands back
 

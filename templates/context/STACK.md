@@ -61,9 +61,7 @@ legal-docs:
   dpa-records: <path, or "none">
 ```
 
-Where the published legal text lives, so the check can read the live wording before claiming a document is affected. A document the project doesn't have is marked `none` explicitly — that is a real answer, and it stops the check inventing a path.
-
-`none` means the document doesn't exist yet, not that it isn't wanted: if a feature triggers a document marked `none`, Ship drafts it from scratch rather than reporting the gap. Use a path the moment one exists.
+Where the published legal text lives, so the check can read the live wording before claiming a document is affected. These are pages in the repo — a document the project doesn't have is marked `none`, and Ship drafts it from scratch if a feature triggers it. Use a path the moment one exists.
 
 ## Known constraints `[derive → confirm]`
 
