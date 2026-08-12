@@ -30,6 +30,20 @@ The reason is the whole point of the check: an agent that can mark components ap
 
 If a slice needs an unapproved component, that is a parked item, not a reason to reach for the marker.
 
+### Every marker added during a run is reported
+
+Any `@approved` marker that appears in the run's diff goes into the final report as a **Needs-you** item: the file, the component, and who asked for it.
+
+**Report it even when the human did ask.** A report filed only when the agent judges it necessary is a report the agent can decide not to file — and an agent that added a marker it shouldn't have is exactly the one that would judge it unnecessary. Unconditional listing is the whole mechanism: it makes an unrequested marker visible without anyone having to suspect it first.
+
+Don't rely on self-reporting for this. The full-diff pass at review detects them mechanically:
+
+```bash
+skills/checks/design-system-guard/scripts/ds-lint.sh --added-markers main...HEAD
+```
+
+Every marker it finds is reported, whether or not any stage mentioned adding one. A marker in the diff that no stage reported is itself the finding.
+
 Consequences:
 
 - Component used but its file has no `@approved` marker → park it: note whether it should be marked (a question for the human) or replaced with an approved component. Do not use it silently, do not decide silently.

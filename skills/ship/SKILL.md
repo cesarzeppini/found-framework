@@ -117,7 +117,7 @@ Ship's last act writes `out/report.html`: one self-contained file, generated thr
 
 The run skill owns what goes in it and hands it over in five sections; Ship's job is rendering them in that order, because the order is the point. **Decisions, not activity** — see RULES.md.
 
-1. **Needs you** — early termination, blocked items as questions, blocking findings that survived their attempts.
+1. **Needs you** — early termination, blocked items as questions, blocking findings that survived their attempts, and every `@approved` marker added during the run.
 2. **Decided without asking** — parked decisions with alternatives, assumptions, anything invented, anything changed in the existing setup, contradictions found, and where a stage would argue with the spec.
 3. **Findings** — check results, severity marked, one line per check including the clean ones.
 4. **Produced** — acceptance criteria met, screenshots inline per route and viewport, collateral linked from the manifest.

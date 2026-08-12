@@ -6,6 +6,26 @@
 
 set -uo pipefail
 
+# --added-markers <git-range>: list every @approved marker added in that range.
+# Used by the full-diff pass at review so a marker cannot be added silently —
+# these are reported whether or not any stage said it added one.
+if [ "${1:-}" = "--added-markers" ]; then
+  RANGE="${2:-main...HEAD}"
+  FOUND=$(git diff --unified=0 "$RANGE" 2>/dev/null \
+          | awk '/^\+\+\+ /{f=substr($0,7)} /^\+/ && /@approved/ && !/^\+\+\+/{print f}' \
+          | sort -u)
+  if [ -n "$FOUND" ]; then
+    echo "== @approved markers added in $RANGE"
+    printf '%s\n' "$FOUND" | sed 's/^/  /'
+    echo
+    echo "   Report each of these in the final report as a Needs-you item, naming who"
+    echo "   asked for it — including when a human did ask."
+    exit 1
+  fi
+  echo "No @approved markers added in $RANGE"
+  exit 0
+fi
+
 TARGETS=("$@")
 if [ ${#TARGETS[@]} -eq 0 ]; then
   TARGETS=()
