@@ -86,6 +86,42 @@ report "raw interactive HTML element" '<(button|input|select|textarea)[[:space:]
 report "inline style attribute" 'style=\{\{'
 report "important override" 'className="[^"]*![a-z-]'
 
+# Component directories the project has but `components:` doesn't list. Without
+# this, an incomplete key narrows the check silently: an unlisted directory is
+# never examined, which looks exactly like a directory with no violations.
+# A deliberate exclusion goes in `components-ignore:` so the decision is written
+# down rather than inferred from absence.
+IGNORE_RAW=$(grep -m1 -E '^components-ignore:' context/STACK.md 2>/dev/null | sed -E 's/^components-ignore:[[:space:]]*//')
+IGNORE_DIRS=$(printf '%s' "${IGNORE_RAW:-}" | tr ',' ' ' | xargs)
+
+UNLISTED=""
+while IFS= read -r d; do
+  d="${d#./}"
+  skip=0
+  for c in $COMPONENTS_DIRS $IGNORE_DIRS; do
+    c="${c%/}"
+    case "$d" in "$c" | "$c"/*) skip=1; break ;; esac
+  done
+  [ "$skip" -eq 1 ] && continue
+  # only directories that directly hold component-shaped files.
+  # find, not `ls a b` — that fails whenever either glob misses.
+  if find "$d" -maxdepth 1 -type f \( -name '*.tsx' -o -name '*.jsx' \) 2>/dev/null | grep -q .; then
+    UNLISTED="$UNLISTED$d"$'\n'
+  fi
+done < <(find . \( -name node_modules -o -name .git -o -name dist -o -name build -o -name .next \) -prune -o \
+              -type d -print 2>/dev/null | grep -iE '(^|/)components?(/|$)')
+
+if [ -n "$UNLISTED" ]; then
+  echo "== component directories not listed in components:"
+  printf '%s' "$UNLISTED" | sort -u | sed 's/^/  /'
+  echo
+  echo "   These are never examined, so their components are neither approved nor"
+  echo "   flagged. Add each to components: in context/STACK.md, or record it under"
+  echo "   components-ignore: to say the exclusion is deliberate."
+  echo
+  HITS=1
+fi
+
 # Approved components carry an @approved marker near the top of their own file.
 # A human puts it there; this script only reads it.
 EXISTING_DIRS=""

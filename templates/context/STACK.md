@@ -40,6 +40,14 @@ Where the design system's components live. **List as many directories as the pro
 
 The guard scans these directories, treats marked files as the approved list, and parks every use of an unmarked one. Import paths are matched by directory tail, so whatever alias the project uses — `@/`, `~/`, or a relative path — resolves the same way.
 
+**An incomplete list is reported, not obeyed.** Every run, the guard looks for component directories the project has and this key doesn't mention, and reports them as a finding. A directory nobody listed is never examined — its components are neither approved nor flagged — and that silence is indistinguishable from a directory with nothing wrong in it.
+
+```
+components-ignore: <path>[, <path>...]   e.g. src/components/icons
+```
+
+Use this for directories that genuinely aren't design-system components — icon files, generated output, a legacy folder being retired. The point is that the exclusion is **written down and deliberate**, rather than inferred from an absence nobody notices.
+
 **Only a human adds the marker.** Agents may add it when explicitly asked to in the moment ("mark Button as approved") and never on their own initiative — not during a run, not as a fix for a parked item, not because a component looks done. An agent that can approve its own components turns the check into a mirror.
 
 Expect everything to be unapproved on a new project. That is the correct starting state; mark components as they're actually reviewed.

@@ -24,6 +24,14 @@ Build the approved list at check time by scanning the directories in `components
 
 Imports are matched by directory tail rather than by a fixed alias, so `@/components/ui/x`, `~/components/ui/x` and `../../components/ui/x` all resolve to the same component. A project that uses no alias at all works the same way.
 
+### An incomplete `components:` is a finding
+
+Every run, report component directories the project has that `components:` doesn't list.
+
+This matters because the failure is silent in the worst way: an unlisted directory is never scanned, so its components are neither approved nor flagged, and the check comes back clean. A narrowed check and a healthy project produce the same output.
+
+Never treat an omission as deliberate. A deliberate exclusion is written down — `components-ignore:` in STACK.md — for directories that genuinely aren't design-system components: icon sets, generated output, a legacy folder being retired. Anything not in either key is an unanswered question, and the resolution is a human's: list it, ignore it, or move it.
+
 ### Agents never add the marker
 
 **Only the human decides what is approved.** An agent may add `@approved` when — and only when — the human asks for it in that moment ("mark Button as approved"). Never on its own initiative.
