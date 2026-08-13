@@ -523,6 +523,7 @@ Reviewer-checks-builder is a pairing, not parallelism: the builder finishes a sl
 
 - STYLE.md denylist structure, enforced at build time by a prose validator.
 - `reference/` one-file-per-verb, so SKILL.md stays small and verbs load on demand. For multi-verb skills only.
+- **`steps/` one-file-per-phase**, the same idea for a skill that runs phases in order rather than dispatching verbs. SKILL.md becomes an index — purpose, the rules that govern every phase, and a table of the step files — and each phase's instructions load only when that phase runs. `spec` is split this way; `run` earns it if it grows. Single-purpose checks stay single files. Numbered filenames, and each step ends by naming the next, so the order is in the files rather than only in the index.
 - The deterministic-detector-plus-judgment pattern, already used in design-system-guard.
 - The hook pattern (later, optional hardening): run a check's detector automatically after every file edit via a post-tool-use hook, instead of trusting the skill to remember to call it. Candidate: design-system-guard's ds-lint on UI file edits. Add only after the pipeline works.
 - The doctor pattern: a maintenance verb that reports drift between context files and reality. See open item 3.
