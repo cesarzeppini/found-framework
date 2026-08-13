@@ -94,6 +94,16 @@ The color/token allowlist is not maintained by hand. Derive it at check time fro
 | 1 | Raw HTML for core UI | `<button>`, `<input>`, `<select>`, `<textarea>`, hand-rolled card / modal / dropdown / tab `<div>` structures |
 | 2 | Off-system component | local component duplicating an `@approved` one; component in the components directory with no `@approved` marker |
 | 3 | Unauthorized customization | color / font / border / shadow / radius overrides on a design-system component, raw hex or `rgb()` values, non-token utilities like `bg-white` `text-black` `text-[#333]`, `!important` |
+| 4 | Typography utilities on semantic text elements | `<h1 className="text-2xl font-semibold">` — the base layer already sets size, weight, colour, tracking and leading on `<h1>`–`<h6>`, `<p>`, `<a>`, `<strong>`, `<blockquote>`, `<li>`, `<label>`, `<legend>` |
+
+### Violation 4 — the type scale
+
+Write `<h1>Projects</h1>`, not `<h1 className="text-2xl font-semibold text-ink-display">Projects</h1>`. Re-specifying what the base layer already sets defeats the type scale one element at a time, and nothing looks broken while it happens.
+
+- **Layout utilities stay legal** on the same elements — `mt-4`, `mb-2`, `max-w-md`, `flex`, `text-center`. Only typography is the violation.
+- **Fix by deleting the utility** when it matches what the base layer already produces. **Park** when the value is one the scale doesn't have — that may be a real need for a new scale step, which is a design decision.
+- Exception: a text colour on a `<label>` wrapping a checkbox or radio, where the visible text is body copy rather than a field title.
+- Gated on `typography-base: true` in STACK.md. On a project whose base layer styles nothing, the utilities *are* the styling and this would fire on every heading. When the key is absent the check reports that it's off rather than staying silent.
 
 Plain layout wrappers (`<div>`, `<section>`, `<span>`, `<ul>`) are fine. The rule targets interactive controls and visual surfaces, not structure.
 

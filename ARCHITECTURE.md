@@ -178,7 +178,11 @@ Not a questionnaire. Three buckets, and only one of them involves asking.
 
 **Actually ask.** Only where derivation is impossible and being wrong is expensive: why now and what changes for the user, the success metric, and anything genuinely blocking.
 
-Flow: read the codebase and context → write the full draft → present a short list of real questions → revise. **One round of questions, not twenty.**
+Every asked item arrives as a **proposal with its reasoning**, never as an open question — a human edits a proposal far faster than they generate an answer, and a bare "what do you want?" hands back the work the spec skill exists to do. Ask open only where no defensible default exists; if that happens often, the gap is in `context/`.
+
+Flow: read the codebase and context → write the full draft → **state the detected picture in one line** → present a short list of real questions → revise. **One round of questions, not twenty.**
+
+The detection line — stack, what exists, what's missing — is one sentence and catches a wrong assumption before it propagates. Deriving silently is right; saying nothing about what was derived is not.
 
 What keeps the list short is the assumptions section. Anything derived but uncertain goes there as a stated assumption instead of becoming a question. Doubt gets written down rather than interrupting.
 
@@ -427,6 +431,8 @@ Standing defaults, so they don't get reinvented per skill:
 
 Already written and updated (v2). Enforces that every interface uses only approved components, only approved tokens and variants, no hardcoded values, no components invented on the spot, nothing pulled from Tailwind's default palette or shadcn directly. Approval is a marker, not a page: a component is approved when its own file carries `@approved` in a comment **within the first 5 lines** — the window is part of the rule, so the marker sits where a reader sees it. The guard builds its list by scanning the directories in `components:` (STACK.md), which may list several, since hand-built components and generated plumbing usually live apart. Imports are matched by directory tail, so any alias convention resolves. An incomplete `components:` is itself a finding — an unlisted directory is never scanned, so it reports clean whether or not anything is wrong in it — and a genuinely deliberate exclusion is recorded in `components-ignore:` rather than left as an absence.
 
+It also flags **typography utilities on semantic text elements** — `<h1 className="text-2xl font-semibold">` re-specifies what the CSS base layer already sets, defeating the type scale one element at a time while nothing looks broken. Layout utilities stay legal on those elements; only size, weight, colour, tracking and leading are violations. Deleting the utility is the fix when it matches the base layer, parking is right when the value is one the scale doesn't have, since that's a design decision. Gated on `typography-base:` in STACK.md — on a project where utilities are the only styling this would fire on every heading — and when the key is absent the check says it's off rather than passing silently.
+
 The final report carries a **Component registry** section: the approved components, then every unmarked component imported anywhere with its import count, then a count of the unmarked and unimported (a count, never a listing — nothing depends on them, so they are inventory rather than decisions). It reads the **whole codebase, not the run's diff**: in a new project the codebase is the backlog, and a component in use since before the framework was installed appears in no diff and would never surface. Inventory, not a finding — it doesn't block, and it shrinks as components get marked. **Only the human adds that marker** — an agent may add it when asked to in the moment, never on its own initiative, because an agent that can approve its own components turns the check into a mirror. Any marker added during a run is listed in the final report as a Needs-you item, **even when a human asked for it**: a report filed only when the agent thinks it necessary is one the agent can decide not to file, so the listing is unconditional and review detects added markers from the diff rather than trusting the report. Token allowlist derives from tokens.css, runs per UI slice plus full-diff at review, parks instead of halting.
 
 ### voice-guard
@@ -446,6 +452,14 @@ Instead:
 - Agents may also propose **observations** for `skills/<name>/LESSONS.md` — softer than a rule, read by the skill on later runs. These land in the final report too, as accept/decline items next to the skill proposals. Nothing enters LESSONS.md unreviewed: a file that skills read every run is a side door if it's unmoderated.
 
 Same two-stop model: skills improve every run, but every change — rule or note — passes the gate you're already standing at. The report marks each proposal approve/decline; approving applies it.
+
+### Managed blocks, and stopping on unmet assumptions
+
+Two conventions for skills that touch things they don't own.
+
+**Marker-delimited managed blocks.** Nothing in the framework currently writes into a project-owned file, but if a skill ever does, it wraps its output in `found:<skill>:start` / `found:<skill>:end` comments and replaces only that block on re-run. Before writing, it reads the file and flags pre-existing instructions on the same subject sitting outside the markers — a stale hand-written rule quietly contradicting the managed one is worse than either alone.
+
+**Unmet assumptions stop the skill.** A skill whose hard requirements aren't met — wrong major version, missing base layer, absent context file — stops and names the specific remediation instead of degrading into a run that produces confidently wrong output. The same intent as scripts' exit 2: a setup failure must never be mistakable for a clean result.
 
 ### The doc states the conventions
 

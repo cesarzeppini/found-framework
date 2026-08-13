@@ -53,6 +53,9 @@ function dirList(raw, fallback = '') {
 const COMPONENT_DIRS = dirList(stackKey('components'), 'src/components/ui');
 const IGNORE_DIRS = dirList(stackKey('components-ignore'));
 
+// Off unless the project declares a CSS base layer that styles semantic elements.
+const TYPOGRAPHY_BASE = /^true$/i.test(stackKey('typography-base'));
+
 // Import specifiers use whatever alias the project prefers (@/, ~/, ../), so match
 // each directory's path tail rather than assuming one.
 const tailOf = (d) => norm(d).replace(/^src\//, '');
@@ -247,6 +250,57 @@ const PATTERNS = [
   ['important override', /className="[^"]*![a-z-]/],
 ];
 
+// Semantic elements the CSS base layer already styles. Typography utilities on
+// these silently defeat the type scale — the most common drift in a Tailwind
+// codebase, and one of the few design mistakes a machine can actually see.
+// Gated on `typography-base:` in STACK.md: on a project whose base layer styles
+// nothing, the utilities ARE the styling and this would fire on every heading.
+const TYPOGRAPHIC_ELEMENTS = 'h1|h2|h3|h4|h5|h6|p|a|strong|blockquote|li|label|legend';
+const SEMANTIC_TAG_RE = new RegExp(`<(${TYPOGRAPHIC_ELEMENTS})\\s[^>]*className="([^"]*)"`, 'g');
+
+const TEXT_SIZES = new Set(['xs', 'sm', 'base', 'lg', 'xl', '2xl', '3xl', '4xl', '5xl', '6xl', '7xl', '8xl', '9xl']);
+const FONT_WEIGHTS = new Set(['thin', 'extralight', 'light', 'normal', 'medium', 'semibold', 'bold', 'extrabold', 'black']);
+// Alignment and wrapping are layout, not typography — legal on any element.
+const TEXT_LAYOUT = new Set(['left', 'center', 'right', 'justify', 'start', 'end', 'wrap', 'nowrap', 'balance', 'pretty', 'ellipsis', 'clip']);
+
+function typographyViolation(cls) {
+  const bare = cls.replace(/^[a-z-]+:/, ''); // drop variants like md: or hover:
+  if (bare.startsWith('font-') && FONT_WEIGHTS.has(bare.slice(5))) return 'font weight';
+  if (bare.startsWith('tracking-')) return 'letter spacing';
+  if (bare.startsWith('leading-')) return 'line height';
+  if (bare.startsWith('text-')) {
+    const v = bare.slice(5);
+    if (TEXT_SIZES.has(v)) return 'text size';
+    if (TEXT_LAYOUT.has(v)) return null;
+    return 'text color';
+  }
+  return null;
+}
+
+function semanticTypographyHits(files) {
+  const found = [];
+  for (const f of files) {
+    const lines = readLines(f);
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      // A <label> wrapping a checkbox or radio is body copy, not a field title —
+      // a text colour on it is legitimate. Same-line heuristic; a label split
+      // across lines is not detected, and that is the accepted limit.
+      const inlineControl = /type="(checkbox|radio)"/.test(line);
+      for (const m of line.matchAll(SEMANTIC_TAG_RE)) {
+        const [, tag, classNames] = m;
+        for (const cls of classNames.split(/\s+/).filter(Boolean)) {
+          const kind = typographyViolation(cls);
+          if (!kind) continue;
+          if (kind === 'text color' && tag === 'label' && inlineControl) continue;
+          found.push(`${f}:${i + 1}: <${tag}> ${cls} (${kind}) — the base layer already sets this`);
+        }
+      }
+    }
+  }
+  return found;
+}
+
 function unlistedComponentDirs() {
   // Component directories the project has but `components:` doesn't list. Without
   // this, an incomplete key narrows the check silently: an unlisted directory is
@@ -309,6 +363,24 @@ function lint(targets) {
       console.log('');
       hits = 1;
     }
+  }
+
+  if (TYPOGRAPHY_BASE) {
+    const typo = semanticTypographyHits(files);
+    if (typo.length) {
+      console.log('== typography utilities on semantic text elements');
+      typo.forEach((l) => console.log(l));
+      console.log('');
+      console.log('   Layout utilities (mt-4, max-w-md, flex) stay legal on these elements.');
+      console.log('   Delete the utility when the base layer already produces it; park it when');
+      console.log('   the value is one the scale does not have.');
+      console.log('');
+      hits = 1;
+    }
+  } else {
+    console.log('== typography check off (no `typography-base: true` in context/STACK.md)');
+    console.log('   Set it if the CSS base layer styles headings, paragraphs and links.');
+    console.log('');
   }
 
   const unlisted = unlistedComponentDirs();

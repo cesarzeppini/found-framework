@@ -52,6 +52,18 @@ Use this for directories that genuinely aren't design-system components — icon
 
 Expect everything to be unapproved on a new project. That is the correct starting state; mark components as they're actually reviewed.
 
+## Typography base `[derive → confirm]`
+
+> **Read by `design-system-guard`.**
+
+```
+typography-base: <true|false>
+```
+
+`true` when the CSS base layer already styles semantic elements — headings, paragraphs, links, `<strong>`, lists, labels — with size, weight, colour, tracking and leading. The guard then flags typography utilities on those elements, since re-specifying what the base layer sets defeats the type scale.
+
+`false` (or absent) on projects where utilities are the only styling. The check reports that it's off rather than passing silently.
+
 ## Checks enabled `[ask]`
 
 Which of `skills/checks/` run on this project, and any project-specific configuration. A check that can't run here — no UI, no browser — is switched off explicitly, never left to fail silently every run.

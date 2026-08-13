@@ -213,6 +213,63 @@ test('clean project exits 0', () => {
   rmSync(root, { recursive: true, force: true });
 });
 
+test('typography utilities on semantic elements are flagged when typography-base is on', () => {
+  const root = project({
+    'context/STACK.md': 'components: src/components/ui\ntypography-base: true\n',
+    'src/components/ui/button.tsx': '// @approved\nexport const Button = () => null;\n',
+    'src/routes/page.tsx': [
+      '<h1 className="text-2xl font-semibold tracking-tight">Projects</h1>',
+      '<p className="text-sm text-ink-muted">Body</p>',
+      '<a className="leading-tight">Link</a>',
+    ].join('\n'),
+  });
+  const { code, out } = run(root, ['src/routes']);
+  assert.equal(code, 1);
+  assert.match(out, /typography utilities on semantic text elements/);
+  assert.match(out, /text size/);
+  assert.match(out, /font weight/);
+  assert.match(out, /letter spacing/);
+  assert.match(out, /line height/);
+  assert.match(out, /text color/);
+  rmSync(root, { recursive: true, force: true });
+});
+
+test('layout utilities on semantic elements stay legal', () => {
+  const root = project({
+    'context/STACK.md': 'components: src/components/ui\ntypography-base: true\n',
+    'src/components/ui/button.tsx': '// @approved\nexport const Button = () => null;\n',
+    'src/routes/page.tsx': [
+      '<h1 className="mt-4 mb-2 max-w-md flex text-center">Projects</h1>',
+      '<p className="mb-4">Body</p>',
+    ].join('\n'),
+  });
+  assert.doesNotMatch(run(root, ['src/routes']).out, /typography utilities on semantic/);
+  rmSync(root, { recursive: true, force: true });
+});
+
+test('text colour on a label wrapping a checkbox is allowed', () => {
+  const root = project({
+    'context/STACK.md': 'components: src/components/ui\ntypography-base: true\n',
+    'src/components/ui/button.tsx': '// @approved\nexport const Button = () => null;\n',
+    'src/routes/page.tsx':
+      '<label className="text-ink-muted"><input type="checkbox" /> Remember me</label>\n',
+  });
+  assert.doesNotMatch(run(root, ['src/routes']).out, /typography utilities on semantic/);
+  rmSync(root, { recursive: true, force: true });
+});
+
+test('typography check stays off without typography-base, and says so', () => {
+  const root = project({
+    'context/STACK.md': 'components: src/components/ui\n',
+    'src/components/ui/button.tsx': '// @approved\nexport const Button = () => null;\n',
+    'src/routes/page.tsx': '<h1 className="text-2xl font-semibold">Projects</h1>\n',
+  });
+  const { out } = run(root, ['src/routes']);
+  assert.doesNotMatch(out, /typography utilities on semantic/);
+  assert.match(out, /typography check off/);
+  rmSync(root, { recursive: true, force: true });
+});
+
 test('--added-markers finds markers introduced in a range', () => {
   const root = project({
     'context/STACK.md': 'components: src/components/ui\n',

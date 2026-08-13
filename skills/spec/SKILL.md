@@ -29,6 +29,8 @@ Not a questionnaire. Only one bucket involves asking.
 
 **Actually ask.** Only where derivation is impossible *and* being wrong is expensive: why now and what changes for the user, the success metric, and anything genuinely blocking.
 
+**Every asked item arrives as a proposal with its reasoning, never as an open question.** Not "what's the success metric?" but "success metric: activation rate at 7 days, because PRODUCT.md frames this as an onboarding problem and that's the first number it would move — confirm or change." A human is far better at editing a proposal than generating one from nothing, and a bare question makes them do the work the spec skill exists to do. Only ask open when no defensible default exists — and if that happens often, the gap is usually in `context/`.
+
 What keeps the question list short is the assumptions section. Anything derived but uncertain goes there as a stated assumption instead of becoming a question. Doubt gets written down rather than interrupting.
 
 ## Flow
@@ -37,8 +39,9 @@ What keeps the question list short is the assumptions section. Anything derived 
 2. Read the codebase for the conventions the feature will inherit — routes, auth patterns, existing empty/loading/error treatments, the data model.
 3. Write the **full draft**, every section, assumptions included.
 4. Run `scripts/spec-no-code.mjs` and clear any hits.
-5. Present the draft with a **short list of real questions** — the "actually ask" bucket only.
-6. Revise against the answers.
+5. **State what you detected, in one line**, before the draft: stack, what already exists, what's missing. "Detected: Next app router + Supabase Auth, invites table absent, no existing empty-state pattern on this route — drafting against `/projects` conventions." A wrong assumption caught here costs a sentence; caught at review it has propagated through every slice.
+6. Present the draft with a **short list of real questions** — the "actually ask" bucket only, each one a proposal.
+7. Revise against the answers.
 
 **One round of questions, not twenty.** If a second round feels necessary, the missing thing almost always belongs in assumptions instead.
 
