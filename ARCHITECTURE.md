@@ -166,6 +166,8 @@ Reads context/, asks the gaps, writes `work/<feature>/SPEC.md`. Reasoning tier. 
 
 **Hard rule: no code in the spec.** No snippets, no implementation suggestions, no library names. Intent, behaviour, constraints only. The spec is about what matters for the company and the user; the how belongs to the task package handed to the builder.
 
+**The depth limit: naming the stack and naming the providers is allowed; anything more specific is implementation.** The spec may say the project runs on Supabase and that invitations go out through a transactional email provider — the builder needs to know what it is building against. It may not name the client library, the method, the table or the option. Stack and providers are facts about the ground; everything below them is a choice the builder makes.
+
 Enforced by a hook that rejects fenced code blocks in SPEC.md.
 
 #### How the spec gets written

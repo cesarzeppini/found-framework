@@ -32,3 +32,5 @@ The spec is about what matters for the company and the user. The *how* belongs t
 **The test for whether a sentence belongs here:** if removing it changes *what counts as done*, it is a constraint and it belongs in the spec. If it only changes *how it is done*, it is implementation and it belongs in the task package.
 
 Naming a library is the most common breach, and it usually arrives disguised as a constraint. "Use Supabase Auth" is implementation. "Session handling must be production-grade, not hand-rolled" is the constraint underneath it — write that instead, and let the builder pick what clears the bar.
+
+**The depth limit: naming the stack and naming the providers is allowed; anything more specific is implementation.** The spec may say the project runs on Supabase and that invitations go out through a transactional email provider — the builder needs to know what it's building against. It may not name the client library, the method, the table or the option. Stack and providers are facts about the ground; everything below them is a choice the builder makes.
