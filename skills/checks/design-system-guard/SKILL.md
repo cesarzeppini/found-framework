@@ -103,7 +103,17 @@ Write `<h1>Projects</h1>`, not `<h1 className="text-2xl font-semibold text-ink-d
 - **Layout utilities stay legal** on the same elements — `mt-4`, `mb-2`, `max-w-md`, `flex`, `text-center`. Only typography is the violation.
 - **Fix by deleting the utility** when it matches what the base layer already produces. **Park** when the value is one the scale doesn't have — that may be a real need for a new scale step, which is a design decision.
 - Exception: a text colour on a `<label>` wrapping a checkbox or radio, where the visible text is body copy rather than a field title.
-- Gated on `typography-base: true` in STACK.md. On a project whose base layer styles nothing, the utilities *are* the styling and this would fire on every heading. When the key is absent the check reports that it's off rather than staying silent.
+- Gated on `typography-base: true` in STACK.md. On a project whose base layer styles nothing, the utilities *are* the styling and this would fire on every heading.
+
+**An absent key is resolved by looking, not assumed.** When `typography-base:` is missing, the guard scans the project's CSS for a base layer that styles semantic elements typographically:
+
+| CSS | Key | Result |
+|---|---|---|
+| base layer found | absent | **Finding** — utilities are going unchecked against a base layer that already sets them |
+| no base layer | absent | One line: genuinely off, record it as `typography-base: false` |
+| either | `true` / `false` | Honoured, silently |
+
+The "genuinely off" line stops as soon as the decision is written down, so it isn't a recurring nag — same shape as `components-ignore:`, where an explicit answer ends the question.
 
 Plain layout wrappers (`<div>`, `<section>`, `<span>`, `<ul>`) are fine. The rule targets interactive controls and visual surfaces, not structure.
 

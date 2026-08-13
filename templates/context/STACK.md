@@ -62,7 +62,9 @@ typography-base: <true|false>
 
 `true` when the CSS base layer already styles semantic elements — headings, paragraphs, links, `<strong>`, lists, labels — with size, weight, colour, tracking and leading. The guard then flags typography utilities on those elements, since re-specifying what the base layer sets defeats the type scale.
 
-`false` (or absent) on projects where utilities are the only styling. The check reports that it's off rather than passing silently.
+`false` on projects where utilities are the only styling.
+
+**Set it either way.** If the key is absent the guard scans your CSS: a base layer found with no key set is reported as a finding, and no base layer found asks you to record `false`. Writing the answer down is what ends the message.
 
 ## Checks enabled `[ask]`
 

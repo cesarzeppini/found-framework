@@ -54,7 +54,9 @@ const COMPONENT_DIRS = dirList(stackKey('components'), 'src/components/ui');
 const IGNORE_DIRS = dirList(stackKey('components-ignore'));
 
 // Off unless the project declares a CSS base layer that styles semantic elements.
-const TYPOGRAPHY_BASE = /^true$/i.test(stackKey('typography-base'));
+const TYPOGRAPHY_BASE_RAW = stackKey('typography-base');
+const TYPOGRAPHY_BASE = /^true$/i.test(TYPOGRAPHY_BASE_RAW);
+const TYPOGRAPHY_BASE_DECLARED = /^(true|false)$/i.test(TYPOGRAPHY_BASE_RAW);
 
 // Import specifiers use whatever alias the project prefers (@/, ~/, ../), so match
 // each directory's path tail rather than assuming one.
@@ -277,6 +279,27 @@ function typographyViolation(cls) {
   return null;
 }
 
+// Does the project's CSS actually style semantic elements typographically? Used
+// only when `typography-base:` is absent, to tell "genuinely off" apart from
+// "nobody set the key" — the second is a gap, the first is a recorded state.
+const TYPO_PROP_RE = /(font-size|font-weight|line-height|letter-spacing|font-family|color)\s*:/;
+const SEMANTIC_SELECTOR_RE = new RegExp(`^(${TYPOGRAPHIC_ELEMENTS})(::?[a-z-]+)?$`);
+
+function detectBaseLayer() {
+  for (const f of filesUnder('.', ['.css', '.scss'])) {
+    for (const m of (readLines(f).join('\n')).matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+      if (!TYPO_PROP_RE.test(m[2])) continue;
+      const selector = m[1].split(/[\n;]/).pop().trim();
+      for (const part of selector.split(',')) {
+        // last token handles descendant selectors like `.prose h1`
+        const leaf = part.trim().split(/\s+/).pop() || '';
+        if (SEMANTIC_SELECTOR_RE.test(leaf)) return { file: f, selector: part.trim() };
+      }
+    }
+  }
+  return null;
+}
+
 function semanticTypographyHits(files) {
   const found = [];
   for (const f of files) {
@@ -377,10 +400,24 @@ function lint(targets) {
       console.log('');
       hits = 1;
     }
-  } else {
-    console.log('== typography check off (no `typography-base: true` in context/STACK.md)');
-    console.log('   Set it if the CSS base layer styles headings, paragraphs and links.');
-    console.log('');
+  } else if (!TYPOGRAPHY_BASE_DECLARED) {
+    // Key absent. Whether that is a gap or a genuine "off" depends on the CSS.
+    const base = detectBaseLayer();
+    if (base) {
+      console.log('== typography-base is not set, but a base layer styles semantic elements');
+      console.log(`   ${base.file}  ->  ${base.selector}`);
+      console.log('');
+      console.log('   Typography utilities on headings, paragraphs and links are going');
+      console.log('   unchecked against a base layer that already sets them. Set');
+      console.log('   `typography-base: true` in context/STACK.md to check them.');
+      console.log('');
+      hits = 1;
+    } else {
+      console.log('== typography check off — no base layer found styling semantic elements');
+      console.log('   Record it: `typography-base: false` in context/STACK.md. This line');
+      console.log('   stops once the decision is written down.');
+      console.log('');
+    }
   }
 
   const unlisted = unlistedComponentDirs();

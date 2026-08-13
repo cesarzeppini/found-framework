@@ -258,15 +258,46 @@ test('text colour on a label wrapping a checkbox is allowed', () => {
   rmSync(root, { recursive: true, force: true });
 });
 
-test('typography check stays off without typography-base, and says so', () => {
+test('missing typography-base with a real base layer is a finding', () => {
   const root = project({
     'context/STACK.md': 'components: src/components/ui\n',
     'src/components/ui/button.tsx': '// @approved\nexport const Button = () => null;\n',
+    'src/styles/globals.css':
+      '@layer base {\n  h1 { font-size: 2rem; font-weight: 600; }\n  p { line-height: 1.6; }\n}\n',
     'src/routes/page.tsx': '<h1 className="text-2xl font-semibold">Projects</h1>\n',
   });
-  const { out } = run(root, ['src/routes']);
-  assert.doesNotMatch(out, /typography utilities on semantic/);
-  assert.match(out, /typography check off/);
+  const { code, out } = run(root, ['src/routes']);
+  assert.equal(code, 1);
+  assert.match(out, /typography-base is not set, but a base layer styles semantic elements/);
+  assert.match(out, /globals\.css/);
+  rmSync(root, { recursive: true, force: true });
+});
+
+test('missing typography-base with no base layer is genuinely off, not a finding', () => {
+  const root = project({
+    'context/STACK.md': 'components: src/components/ui\n',
+    'src/components/ui/button.tsx': '// @approved\nexport const Button = () => null;\n',
+    // utility-only CSS: no semantic element is styled
+    'src/styles/globals.css': '@import "tailwindcss";\n.card { padding: 1rem; }\n',
+    'src/routes/page.tsx': 'import { Button } from "~/components/ui/button";\n',
+  });
+  const { code, out } = run(root, ['src/routes']);
+  assert.equal(code, 0);
+  assert.match(out, /no base layer found styling semantic elements/);
+  assert.match(out, /typography-base: false/);
+  rmSync(root, { recursive: true, force: true });
+});
+
+test('an explicit typography-base: false is silent', () => {
+  const root = project({
+    'context/STACK.md': 'components: src/components/ui\ntypography-base: false\n',
+    'src/components/ui/button.tsx': '// @approved\nexport const Button = () => null;\n',
+    'src/styles/globals.css': '@layer base {\n  h1 { font-size: 2rem; }\n}\n',
+    'src/routes/page.tsx': 'import { Button } from "~/components/ui/button";\n',
+  });
+  const { code, out } = run(root, ['src/routes']);
+  assert.equal(code, 0);
+  assert.doesNotMatch(out, /typography/i);
   rmSync(root, { recursive: true, force: true });
 });
 
