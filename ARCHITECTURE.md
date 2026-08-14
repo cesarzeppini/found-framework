@@ -320,11 +320,23 @@ The checks read the same diff independently, so they run in parallel — one sub
 
 #### The builder never reviews itself
 
-Build in Claude Code → review in Codex. Build in Codex → review in Claude Code. A harness-level split, not just a tier-level one.
+Build in Claude Code → review in Codex. Build in Codex → review in Claude Code. A harness-level split, not just a tier-level one — the same model in the same context that made a decision is the worst judge of whether it was right.
 
-This is why the whole set has to be harness-neutral: the review half runs somewhere else, reading the same `context/`, the same `skills/checks/`, the same SPEC.md.
+**Building in Claude Code:** the official `codex-plugin-cc` plugin (`openai/codex-plugin-cc`) runs Codex from inside the same session. No MCP server, no leaving the tool. Install once per machine:
 
-The handoff runs over MCP: each harness exposes an MCP server, the other connects to it, and the builder calls the reviewer as a tool inside the same run. Configured once per machine, not per project. If the link is absent, review falls back to the same harness on reasoning tier — weaker, but the pipeline doesn't stop. (Verify current Codex MCP support before building on this.)
+```
+claude plugin marketplace add openai/codex-plugin-cc
+claude plugin install codex@openai-codex
+codex login
+```
+
+`/codex:review` is Codex's own fixed pass and takes no custom instructions. `/codex:adversarial-review --base main <text>` does — it's steerable, so it's the one the review skill calls, pointed at `skills/review/SKILL.md` so Codex runs *our* review (the checks, the user-story test, our report format) rather than a generic one. Both are read-only; neither touches the diff.
+
+**Building in Codex:** the reverse swap — review in Claude Code — has no plugin yet.
+
+If Codex is unreachable either way, review falls back to the same harness on reasoning tier — weaker, but the pipeline doesn't stop.
+
+This is still why the whole set has to be harness-neutral: the review half reads the same `context/`, the same `skills/checks/`, the same SPEC.md, whichever way it gets invoked.
 
 ---
 
@@ -537,7 +549,7 @@ Deliberately not taking: the multi-harness compile step (symlinks and a shared R
 
 ## Open items
 
-1. ~~How the cross-harness review actually runs~~ — resolved: MCP link between harnesses, with same-harness fallback. Needs verifying against current Codex MCP support.
+1. ~~How the cross-harness review actually runs~~ — resolved: the `codex-plugin-cc` plugin runs Codex review from inside Claude Code via `/codex:adversarial-review`, steered to execute the review skill. No MCP server, no harness switch. Same-harness fallback when Codex isn't reachable.
 2. **Does BRAND.md hold positioning and messaging, or does that get its own file.** Currently in BRAND.md, which risks making it the drawer everything goes in.
 3. **COMPANY.md review cadence.** Stale numbers mean the minimum-viable rule calibrates against a company that no longer exists. Planned fix: a small `doctor` maintenance verb (pattern from Impeccable's doctor) that checks context files against reality — user counts, stack facts, component paths — and reports drift instead of silently trusting stale files. Build it after the pipeline works, not before.
 4. **First pilot project and feature.** The framework is project-agnostic — clients, your own products, anything. Pick one project and one small feature for the first end-to-end run.

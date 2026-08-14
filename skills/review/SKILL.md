@@ -45,9 +45,17 @@ If a blocking finding survives its attempts, **end the run** and put it in the f
 
 Build in Claude Code → review in Codex. Build in Codex → review in Claude Code. A harness-level split, not just a tier-level one: the same model in the same context that made a decision is the worst judge of whether it was right.
 
-The handoff runs over MCP — each harness exposes a server, the other connects to it, and the builder calls the reviewer as a tool inside the same run. Configured once per machine, not per project.
+**In Claude Code, invoke the `codex-plugin-cc` plugin** — installed once per machine (`claude plugin marketplace add openai/codex-plugin-cc`, `claude plugin install codex@openai-codex`, `codex login`), not per project. Use `/codex:adversarial-review`, not `/codex:review` — only the adversarial command takes free text after its flags, and that text is what points Codex at this skill instead of running its own generic pass:
 
-**If the link is absent, fall back** to the same harness at reasoning tier, and say so in the report. Weaker, but the pipeline doesn't stop. Verify current Codex MCP support before relying on the cross-harness path.
+```
+/codex:adversarial-review --base main Read skills/review/SKILL.md in this repo and act as
+the review skill: run the user-story test, capture screenshots, and run the checks in
+skills/checks/. Report findings in this skill's format.
+```
+
+`--background` for anything non-trivial, then `/codex:status` and `/codex:result` to collect it. Both review commands are read-only — nothing Codex runs here touches the diff.
+
+**If Codex isn't installed or reachable, fall back** to the same harness at reasoning tier, and say so in the report. Weaker, but the pipeline doesn't stop.
 
 This is why the whole set has to be harness-neutral: the review half runs somewhere else, reading the same `context/`, the same `skills/checks/`, the same SPEC.md.
 

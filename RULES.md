@@ -11,7 +11,7 @@ Operating rules and standing constraints. The shared source — CLAUDE.md and AG
 - **Minimum-viable rule.** Build the simplest thing that delivers the value in this slice. Justification lives in the project's COMPANY.md. Exceptions are only the overrides listed in SPEC.md.
 - **Cut by vertical slice, not by layer.** A slice is valid only if Plan can state how it would be tested.
 - **Tests per slice.** Implement → write the test → run the full suite → pass, or stop. A slice without a test for its behaviour hasn't passed.
-- **The builder never reviews itself.** Build in one harness, review in the other; same-harness reasoning-tier fallback if the MCP link is absent.
+- **The builder never reviews itself.** Building in Claude Code, review runs through the `codex-plugin-cc` plugin — Codex reviews the diff without a harness switch. Same-harness reasoning-tier fallback if Codex isn't reachable.
 - **Capability tiers, not model names.** Tasks carry a tier: reasoning (deepest thinking), standard (balanced), light (fast/cheap). The tier→model table in this harness's CLAUDE.md / AGENTS.md is the only place models are named — never hardcode one in a skill, task package or agent file. The table is filled by detection, not by hand: the first run in a harness detects the models it offers, maps the tiers, and writes one line per row saying why. If only one model is available, every tier resolves to it and the pipeline still runs.
 - **Harness-neutral wording.** Skills describe intent ("these tasks are independent and can run in parallel"), never tool-specific mechanism.
 - **Parallelism degrades to sequential.** tasks.md marks independence; a harness that can't parallelise runs in order and produces the same output.
