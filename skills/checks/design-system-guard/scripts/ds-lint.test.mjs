@@ -301,6 +301,79 @@ test('an explicit typography-base: false is silent', () => {
   rmSync(root, { recursive: true, force: true });
 });
 
+test('a semantic token on an approved component is a violation — no exception', () => {
+  const root = project({
+    ...BASE,
+    'src/routes/page.tsx':
+      'import { Button } from "~/components/ui/button";\nexport default () => <Button className="bg-muted">Save</Button>;\n',
+  });
+  const { code, out } = run(root, ['src/routes']);
+  assert.equal(code, 1);
+  assert.match(out, /appearance override on a design-system component/);
+  assert.match(out, /<Button> bg-muted \(background\)/);
+  assert.match(out, /Semantic tokens are not an exception here/);
+  rmSync(root, { recursive: true, force: true });
+});
+
+test('appearance override catches border, ring, shadow, radius, typography, opacity', () => {
+  const root = project({
+    ...BASE,
+    'src/routes/page.tsx': [
+      'import { Button } from "~/components/ui/button";',
+      'export default () => <Button className="border-input ring-ring shadow-md rounded-full font-bold opacity-50">Save</Button>;',
+    ].join('\n'),
+  });
+  const { out } = run(root, ['src/routes']);
+  assert.match(out, /border-input \(border\)/);
+  assert.match(out, /ring-ring \(ring\)/);
+  assert.match(out, /shadow-md \(shadow\)/);
+  assert.match(out, /rounded-full \(radius\)/);
+  assert.match(out, /font-bold \(typography\)/);
+  assert.match(out, /opacity-50 \(opacity\)/);
+  rmSync(root, { recursive: true, force: true });
+});
+
+test('layout classes on an approved component stay legal', () => {
+  const root = project({
+    ...BASE,
+    'src/routes/page.tsx': [
+      'import { Button } from "~/components/ui/button";',
+      'export default () => <Button className="mt-4 flex items-center text-center w-full">Save</Button>;',
+    ].join('\n'),
+  });
+  assert.doesNotMatch(run(root, ['src/routes']).out, /appearance override/);
+  rmSync(root, { recursive: true, force: true });
+});
+
+test('appearance check only fires on tags actually imported from a component directory', () => {
+  const root = project({
+    ...BASE,
+    'src/routes/page.tsx': [
+      'import { Icon } from "lucide-react";', // capitalised, but not a design-system import
+      'export default () => <Icon className="bg-muted" />;',
+    ].join('\n'),
+  });
+  assert.doesNotMatch(run(root, ['src/routes']).out, /appearance override/);
+  rmSync(root, { recursive: true, force: true });
+});
+
+test('appearance check catches className on a component whose props span multiple lines', () => {
+  const root = project({
+    ...BASE,
+    'src/routes/page.tsx': [
+      'import { Button } from "~/components/ui/button";',
+      'export default () => (',
+      '  <Button',
+      '    onClick={() => {}}',
+      '    className="bg-muted"',
+      '  >Save</Button>',
+      ');',
+    ].join('\n'),
+  });
+  assert.match(run(root, ['src/routes']).out, /<Button> bg-muted \(background\)/);
+  rmSync(root, { recursive: true, force: true });
+});
+
 test('--added-markers finds markers introduced in a range', () => {
   const root = project({
     'context/STACK.md': 'components: src/components/ui\n',

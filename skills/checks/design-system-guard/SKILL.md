@@ -1,6 +1,6 @@
 ---
 name: design-system-guard
-description: Runs at the end of every slice that touches UI, and once more across the full diff at review. Verifies every component used carries an @approved marker in its own file (component directory defined in context/STACK.md; only a human adds the marker), auto-fixes raw HTML, hardcoded colors, and unauthorized style overrides, and parks ambiguous cases for the final report — it never halts the run. Triggers on UI/component work, styling changes, and new pages or sections.
+description: Runs at the end of every slice that touches UI, and once more across the full diff at review. Verifies every component used carries an @approved marker in its own file (component directory defined in context/STACK.md; only a human adds the marker), auto-fixes raw HTML and hardcoded colors, flags any appearance override on an approved component including semantic tokens, and parks ambiguous cases for the final report — it never halts the run. Triggers on UI/component work, styling changes, and new pages or sections.
 ---
 
 # Design system guard
@@ -85,7 +85,7 @@ This section is an inventory, not a finding: it doesn't block, and a long list o
 
 ## Tokens
 
-The color/token allowlist is not maintained by hand. Derive it at check time from `context/tokens.css` — every semantic token defined there is allowed; anything else is a violation. `references/allowed-customization.md` covers layout classes and props only.
+The color/token allowlist is not maintained by hand. Derive it at check time from `context/tokens.css` — every semantic token defined there is allowed on a plain element; anything else is a violation there. **On an approved design-system component, no override is allowed — token or not.** `tokens.css` says what a raw `<div>` may use; it does not reopen an approved component's own appearance. `references/allowed-customization.md` covers layout classes and props.
 
 ## Violations
 
@@ -93,8 +93,20 @@ The color/token allowlist is not maintained by hand. Derive it at check time fro
 | --- | --- | --- |
 | 1 | Raw HTML for core UI | `<button>`, `<input>`, `<select>`, `<textarea>`, hand-rolled card / modal / dropdown / tab `<div>` structures |
 | 2 | Off-system component | local component duplicating an `@approved` one; component in the components directory with no `@approved` marker |
-| 3 | Unauthorized customization | color / font / border / shadow / radius overrides on a design-system component, raw hex or `rgb()` values, non-token utilities like `bg-white` `text-black` `text-[#333]`, `!important` |
+| 3 | Appearance override on a design-system component | `<Card className="bg-muted">`, `border-*`, `ring-*`, `shadow-*`, `rounded-*`, `font-*`, `opacity-*` on an approved component, raw hex/`rgb()`, non-token utilities like `bg-white` `text-black` `text-[#333]`, `!important` |
 | 4 | Typography utilities on semantic text elements | `<h1 className="text-2xl font-semibold">` — the base layer already sets size, weight, colour, tracking and leading on `<h1>`–`<h6>`, `<p>`, `<a>`, `<strong>`, `<blockquote>`, `<li>`, `<label>`, `<legend>` |
+
+### Violation 3 — no token exception
+
+**Semantic tokens are not a carve-out.** `<Card className="bg-muted">` is a violation exactly like `<Card className="bg-gray-100">` is — same finding, same handling.
+
+The property being protected isn't theme-safety, it's **component authority**. A token keeps the color themeable, but the call site is still the one deciding what the component looks like, and once that's possible the system no longer owns its own appearance — different call sites accumulate slightly different treatments with no variant governing any of them.
+
+An appearance override is information: it says the component is missing a variant. Treat it as that — park it and propose the variant, rather than resolving it locally with whatever token happens to look right.
+
+**The one legitimate escape:** a component that is genuinely designed to be an unstyled layout or slot primitive may accept surface classes, because that's its purpose. This is declared in the component itself — a line next to its own `@approved` marker saying it's unstyled by design — never assumed at a call site, and never handled by adding the color to an allowlist.
+
+Only a design-system component's own tag is checked (imports actually pulled from a configured `components:` directory) — a third-party component or a plain element isn't held to this, and `context/tokens.css` still governs those.
 
 ### Violation 4 — the type scale
 
@@ -129,10 +141,10 @@ Its tests live beside it — `node --test skills/checks/design-system-guard/scri
 
 - raw `<button>` → `Button` with the matching variant
 - raw `<input>` / `<textarea>` → `Input` / `Textarea`
-- hex or non-token color utility → the semantic token that matches (`bg-primary`, `text-muted-foreground`, `border-border`)
+- hex or non-token color utility on a plain element → the semantic token that matches (`bg-primary`, `text-muted-foreground`, `border-border`)
 - duplicate local component with an exact `@approved` equivalent → the approved component
 
-**Do not touch — park instead** when intent is unclear: a custom component with no close equivalent, an override that looks deliberate (a brand-specific surface, a one-off marketing treatment), or a genuinely new component need. Guessing here either destroys intentional work or silently approves drift. Parked items don't halt the slice — they go in the report block and surface in the final report next to the screenshots.
+**Do not touch — park instead** when intent is unclear: a custom component with no close equivalent, an appearance override on an approved component (no variant covers the need — whether the class is a raw color or a token), or a genuinely new component need. Guessing here either destroys intentional work or silently approves drift. State the alternative when parking: "no variant for a recessed surface on `Card` — add `variant=\"muted\"`, or keep as-is?" Parked items don't halt the slice — they go in the report block and surface in the final report next to the screenshots.
 
 ## Report
 
@@ -146,9 +158,11 @@ Fixed (3)
   src/routes/dashboard.tsx:42  raw <button> -> <Button variant="outline">
   src/routes/dashboard.tsx:57  text-[#1f2937] -> text-foreground
   src/components/Row.tsx:12    bg-white -> bg-card
-Parked (1)
+Parked (2)
   src/components/StatTile.tsx:8  custom card surface, closest match: Card
   -> Replace with Card, or mark StatTile @approved? (a human's call, never mine)
+  src/routes/settings.tsx:31     <Card className="bg-muted">
+  -> No variant for a recessed card; add variant="muted" to Card, or keep as-is?
 ```
 
 Parked items never halt the run. They accumulate into the final report for the human gate. The full-diff pass at review re-checks them: some resolve themselves (the component got replaced in a later slice); the rest stay listed.

@@ -324,6 +324,95 @@ function semanticTypographyHits(files) {
   return found;
 }
 
+// ---- appearance overrides on design-system components ----
+//
+// No token exception. A semantic token on a call site is still the call site
+// deciding how the component looks, which is the authority the system is supposed
+// to hold. An appearance override is a signal that a variant is missing; allowing
+// `bg-muted` through swallows that signal instead of surfacing it.
+
+// Named imports pulled from a configured component directory, per file. Only these
+// are checked: a capitalised tag from elsewhere is not a design-system component,
+// and flagging it would fire on every third-party element in the tree.
+function systemTagsIn(file) {
+  const tags = new Set();
+  if (!IMPORT_RE) return tags;
+  const text = readLines(file).join('\n');
+  for (const m of text.matchAll(/import\s*\{([^}]*)\}\s*from\s*["']([^"']+)["']/g)) {
+    if (!KEY_RE || !KEY_RE.test(m[2])) continue;
+    for (const spec of m[1].split(',')) {
+      const name = (spec.split(/\s+as\s+/).pop() || '').trim();
+      if (/^[A-Z]/.test(name)) tags.add(name);
+    }
+  }
+  return tags;
+}
+
+// `text-center` and friends are layout; `border` bare is a width, not a colour.
+// Everything else in this shape changes appearance.
+function appearanceViolation(cls) {
+  const bare = cls.replace(/^([a-z0-9-]+:)+/, '').replace(/^!/, '');
+  if (bare.startsWith('text-')) {
+    const v = bare.slice(5);
+    if (TEXT_LAYOUT.has(v)) return null;
+    return TEXT_SIZES.has(v) ? 'text size' : 'text colour';
+  }
+  if (/^bg-/.test(bare)) return 'background';
+  if (/^(border|divide)-/.test(bare)) return 'border';
+  if (/^(ring|ring-offset)-/.test(bare)) return 'ring';
+  if (/^shadow(-|$)/.test(bare)) return 'shadow';
+  if (/^rounded(-|$)/.test(bare)) return 'radius';
+  if (/^(font|tracking|leading)-/.test(bare)) return 'typography';
+  if (/^opacity-/.test(bare)) return 'opacity';
+  return null;
+}
+
+const OPEN_TAG_RE = /<([A-Z][A-Za-z0-9_]*)\b/g;
+const TAG_SCAN_LIMIT = 5000; // bail on a pathologically long/unterminated tag rather than hang
+
+// Finds the end of a JSX opening tag by tracking brace depth, not by matching up
+// to the first `>`. A single-line regex like [^>]*? breaks the moment a prop
+// value contains its own `>` — and `onClick={() => {}}` does, since `=>` is one.
+// Depth-tracking lets the scan cross an expression prop without stopping inside it.
+// Known accepted limit, same spirit as the checkbox/radio same-line heuristic
+// elsewhere in this file: a literal `>` inside a plain string prop value (e.g.
+// `title="a > b"`) can still end the scan early. Rare enough in practice not to
+// warrant full string-aware parsing here.
+function tagBodyAt(text, start) {
+  let depth = 0;
+  for (let i = start; i < Math.min(text.length, start + TAG_SCAN_LIMIT); i++) {
+    const c = text[i];
+    if (c === '{') depth++;
+    else if (c === '}') depth--;
+    else if (depth <= 0 && c === '>') return text.slice(start, i + 1);
+  }
+  return text.slice(start, start + TAG_SCAN_LIMIT);
+}
+
+function appearanceHits(files) {
+  const found = [];
+  for (const f of files) {
+    const tags = systemTagsIn(f);
+    if (tags.size === 0) continue;
+    const text = readLines(f).join('\n');
+    OPEN_TAG_RE.lastIndex = 0;
+    let m;
+    while ((m = OPEN_TAG_RE.exec(text))) {
+      const tag = m[1];
+      if (!tags.has(tag)) continue;
+      const body = tagBodyAt(text, OPEN_TAG_RE.lastIndex);
+      const clsMatch = body.match(/className="([^"]*)"/);
+      if (!clsMatch) continue;
+      const line = text.slice(0, m.index).split('\n').length;
+      for (const cls of clsMatch[1].split(/\s+/).filter(Boolean)) {
+        const kind = appearanceViolation(cls);
+        if (kind) found.push(`${f}:${line}: <${tag}> ${cls} (${kind})`);
+      }
+    }
+  }
+  return found;
+}
+
 function unlistedComponentDirs() {
   // Component directories the project has but `components:` doesn't list. Without
   // this, an incomplete key narrows the check silently: an unlisted directory is
@@ -418,6 +507,18 @@ function lint(targets) {
       console.log('   stops once the decision is written down.');
       console.log('');
     }
+  }
+
+  const appearance = appearanceHits(files);
+  if (appearance.length) {
+    console.log('== appearance override on a design-system component');
+    appearance.forEach((l) => console.log(l));
+    console.log('');
+    console.log('   Semantic tokens are not an exception here. Layout classes (spacing, flex,');
+    console.log('   grid, size, position) stay legal. If the component has no variant for this,');
+    console.log('   that is the finding: park it and propose the variant.');
+    console.log('');
+    hits = 1;
   }
 
   const unlisted = unlistedComponentDirs();
