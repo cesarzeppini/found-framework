@@ -1,6 +1,6 @@
 ---
 name: design-system-guard
-description: Runs at the end of every slice that touches UI, and once more across the full diff at review. Verifies every component used carries an @approved marker in its own file (component directory defined in context/STACK.md; only a human adds the marker), auto-fixes raw HTML and hardcoded colors, flags any appearance override on an approved component including semantic tokens, and parks ambiguous cases for the final report — it never halts the run. Triggers on UI/component work, styling changes, and new pages or sections.
+description: Runs at the end of every slice that touches UI, and once more across the full diff at review. Verifies every component used carries an @approved marker in its own file (component directory defined in context/STACK.md; only a human adds the marker), auto-fixes raw HTML and hardcoded colors, flags any appearance override on an approved component including semantic tokens, and parks ambiguous cases for the final report — it never halts the run. Can also generate a /components page documenting everything currently approved, on request. Triggers on UI/component work, styling changes, new pages or sections, or a direct request to check or document the design system.
 ---
 
 # Design system guard
@@ -82,6 +82,25 @@ Three groups, and the split is the point:
 **Scan the whole codebase, not this run's diff.** In a new project the entire codebase is the backlog, and a component that has been in use since before the framework was installed appears in no diff — it would never surface otherwise. That's exactly the component most worth asking about, since it's load-bearing and unreviewed.
 
 This section is an inventory, not a finding: it doesn't block, and a long list on the first run is expected rather than alarming. It shrinks as components get marked.
+
+## Generate the design system page
+
+On request — "generate the design system page," "show me what's approved" — build a `/components` route documenting what's *actually* approved right now. A living reference, regenerated on demand, never a hand-maintained registry and never the source of approval.
+
+**Shape:**
+- A page shell with sidebar nav: one entry per token category (colors, typography, spacing, radius, elevation) and one per approved component.
+- Each entry renders into a section with a heading and a short description.
+- **Colors** — a swatch, the token name, the value, read from `context/tokens.css`.
+- **Typography** — every step in the scale, rendered at actual size, labelled with its token name.
+- **Components** — every `@approved` component, every variant it has, with the snippet to use it (name and props, never internals).
+- Nothing approved yet → say so plainly. Do not invent entries to avoid an empty page.
+
+**Rules:**
+- Documentation only. No new CSS, no new primitives, nothing that changes how the app looks anywhere else.
+- Never invent a component to fill a gap on the page — render what's actually approved.
+- Safe to regenerate any time; it always reflects the current approved set, so there is no reason to hand-edit it between runs.
+
+This is a project's own route, built with this project's own components — not framework infrastructure, and not shared or versioned centrally. Building it is itself a UI-touching change, so it goes through the normal pipeline (spec it, build it) like any other feature; this section says what the page should contain when that happens.
 
 ## Tokens
 
