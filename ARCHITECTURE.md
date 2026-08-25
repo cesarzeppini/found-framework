@@ -158,6 +158,8 @@ Anything ambiguous mid-run is **parked, not asked**: the agent makes the reversi
 
 The final report = screenshots, parked decisions, audit findings, collateral in out/. One review session on your phone, not fifteen interruptions.
 
+**Per-run flags** override the default pipeline for one invocation, never a project setting — `context/` is untouched either way. `run`'s frontmatter carries an `argument-hint` so the available flags show up in autocomplete before a run starts, and `/run` with no feature argument prints the same list instead of running. Two exist today: `--no-screenshots` (Review still runs `checks/a11y` against the live pages, just doesn't write the PNGs — see [scripts/screenshots.mjs](scripts/screenshots.mjs)'s `--no-images`) and `--no-distribution` / `--channels=<list>` (Ship's tier × channel fan-out, overridden for this run only — `out/report.html` and legal drafting are unaffected by either). A flag that needs to persist across runs belongs in `context/` instead — a flag is for "not this time," not "not ever."
+
 ---
 
 ### 1 — Spec
@@ -309,7 +311,7 @@ Two levels:
 **End of feature** — the full pass:
 
 - User-story test. Does the whole feature work the way a user experiences it, not just the way the tests do.
-- Screenshots of every route in the spec's affected-screens list. Playwright, mobile and desktop. This is the only real check on whether the interface is any good — taste can't be linted, so a human looks. Batched at feature level, not per slice, so approval isn't fifteen interruptions a day.
+- Screenshots of every route in the spec's affected-screens list. Playwright, mobile and desktop. This is the only real check on whether the interface is any good — taste can't be linted, so a human looks. Batched at feature level, not per slice, so approval isn't fifteen interruptions a day. Skippable per run with `--no-screenshots` (see "Per-run flags" above) — `checks/a11y` keeps running regardless, since it doesn't depend on the images existing.
 - `checks/a11y` — axe-core over the same Playwright run. Blocking.
 - `checks/security-audit` — once, reading the security surface plus the full diff. Blocking; unresolvable high-severity findings end the run into the final report.
 - `checks/compliance` — once, alongside the security audit. Reads the compliance surface plus the diff and reports which legal documents are affected and why. Advisory as a check; its consequences land in Ship.
@@ -354,7 +356,7 @@ Not every change earns a blog post. DISTRIBUTION.md defines three tiers:
 | Feature | changelog, email update, social posts |
 | Milestone | all of the above, plus blog post, case study, video script, build-in-public profile update |
 
-Plan already knows the size of what's being built, so it tags the tier. Ship produces exactly the intersection of tier and the channels DISTRIBUTION.md has switched on. No human deciding "is this blog-worthy" each time — the rule is written once per project.
+Plan already knows the size of what's being built, so it tags the tier. Ship produces exactly the intersection of tier and the channels DISTRIBUTION.md has switched on. No human deciding "is this blog-worthy" each time — the rule is written once per project. Overridable per run with `--no-distribution` or `--channels=<list>` (see "Per-run flags" above), without editing DISTRIBUTION.md.
 
 Possible outputs across tiers: changelog, blog post, case study, LinkedIn post, build-in-public update, Twitter post, YouTube video script, email update.
 

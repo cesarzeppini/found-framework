@@ -13,6 +13,8 @@ Runs at end of feature, over the same browser pass as the screenshots — one ru
 node scripts/screenshots.mjs --base <url> --routes <affected screens> --out work/<feature>/out/screens --axe
 ```
 
+If `run` was invoked with `--no-screenshots`, add `--no-images`: the browser still navigates every route and axe still runs, the PNGs just aren't written. This check never skips because screenshots were turned off — the two are independent outputs of the same pass.
+
 axe-core runs against WCAG 2.0/2.1 A and AA on every route at both viewports, and writes `out/screens/a11y.json`. The script exits non-zero when anything critical or serious is found.
 
 Run it at both viewports deliberately: contrast and focus behaviour differ between them, and a mobile nav that traps focus usually passes on desktop.

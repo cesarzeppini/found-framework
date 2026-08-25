@@ -1,6 +1,7 @@
 ---
 name: run
 description: The orchestrator. Given an approved SPEC.md, executes plan → build → review → ship in order, unattended, and ends by assembling the final report. Enforces the two-stop model, park-don't-ask, the effort ceiling as the only mid-run halt, and terminate-into-the-report on any blocking failure. Triggers when a human approves a spec or asks to run the pipeline on one.
+argument-hint: [feature] [--no-screenshots] [--no-distribution] [--channels=<ch1,ch2,...>]
 ---
 
 # Run
@@ -12,6 +13,18 @@ Given an approved `work/<feature>/SPEC.md`, execute the pipeline end to end:
 ```
 
 Without this skill there is no loop — just five skills a human prompts one by one.
+
+## Invocation with no feature named
+
+`/run` with no feature argument prints this section — the flags below and what each does — instead of starting a run. Use it to check what's available before committing to a run; the `argument-hint` in this file's frontmatter surfaces the same list in autocomplete.
+
+## Flags
+
+Per-invocation overrides, not project settings — they change nothing in `context/` and apply to this run only. Default (no flags) is the full pipeline described below, unchanged.
+
+- **`--no-screenshots`** — Review skips writing the screenshot images. `checks/a11y` still runs against the same live pages (the browser pass runs `--no-images` instead of skipping outright — see [scripts/screenshots.mjs](../../scripts/screenshots.mjs)), so a11y coverage doesn't silently drop with the visual artifact.
+- **`--no-distribution`** — Ship skips the tier × channel fan-out entirely: no changelog, no social posts, no blog, nothing in `out/` per channel. `out/report.html` and legal drafting are unaffected — neither is a channel, and legal is never toggleable (RULES.md).
+- **`--channels=<ch1,ch2,...>`** — Overrides `context/DISTRIBUTION.md`'s on/off switches for this run only, without editing the file. Still intersected with the feature tier from Plan — a fix-tier feature with `--channels=blog` still produces only a changelog line, because the tier ceiling isn't a flag.
 
 ## Preconditions
 

@@ -21,6 +21,8 @@ Not every change earns a blog post. Plan already tagged the feature tier; `conte
 
 **Produce exactly the intersection** of the tier's list and the channels DISTRIBUTION.md has switched on. No human deciding "is this blog-worthy" each time — the rule is written once per project. A channel that's off produces nothing, silently; a channel that's on but has no section in BRAND.md is a finding for the report, not a guess at the voice.
 
+`run`'s `--no-distribution` flag skips this fan-out entirely for one invocation, without touching DISTRIBUTION.md; `--channels=<list>` overrides which channels count as "on" for that invocation, still intersected with the tier. Neither flag touches `out/report.html` or legal drafting — see below, legal is never toggleable.
+
 ## What the copy may claim
 
 The spec's success metric is the ceiling. Collateral may describe what shipped and what it's for; it may not claim results that haven't happened yet, or numbers nothing measured.

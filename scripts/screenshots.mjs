@@ -6,7 +6,11 @@
 // Usage:
 //   node scripts/screenshots.mjs --base http://localhost:3000 \
 //     --routes /,/dashboard,/settings \
-//     --out work/<feature>/out/screens [--axe] [--wait networkidle]
+//     --out work/<feature>/out/screens [--axe] [--wait networkidle] [--no-images]
+//
+// --no-images skips writing the PNGs (route/viewport still navigated and still
+// checked by --axe if passed) — for when a run only wants a11y, not the visual
+// artifact. See ARCHITECTURE.md, "Per-run flags".
 //
 // Exits 1 if any route fails to load, or if --axe found violations.
 // Playwright and (for --axe) @axe-core/playwright must be installed — standing
@@ -30,6 +34,7 @@ const routes = (arg('routes') ?? '/').split(',').map((r) => r.trim()).filter(Boo
 const outDir = arg('out', 'out/screens');
 const waitUntil = arg('wait', 'networkidle');
 const withAxe = process.argv.includes('--axe');
+const noImages = process.argv.includes('--no-images');
 
 if (!base) {
   console.error('usage: screenshots.mjs --base <url> --routes /a,/b --out <dir> [--axe]');
@@ -70,7 +75,7 @@ for (const viewport of VIEWPORTS) {
   for (const route of routes) {
     const page = await context.newPage();
     const url = new URL(route, base).toString();
-    const file = join(outDir, `${slug(route)}-${viewport.name}.png`);
+    const file = noImages ? null : join(outDir, `${slug(route)}-${viewport.name}.png`);
 
     try {
       const response = await page.goto(url, { waitUntil, timeout: 30_000 });
@@ -81,9 +86,11 @@ for (const viewport of VIEWPORTS) {
         continue;
       }
 
-      await page.screenshot({ path: file, fullPage: true });
+      if (!noImages) {
+        await page.screenshot({ path: file, fullPage: true });
+      }
       captured.push({ route, viewport: viewport.name, file });
-      console.log(`ok   ${viewport.name.padEnd(7)} ${route} -> ${file}`);
+      console.log(`ok   ${viewport.name.padEnd(7)} ${route}${file ? ` -> ${file}` : ' (no image)'}`);
 
       if (withAxe) {
         const { violations: found } = await new AxeBuilder({ page })
@@ -125,5 +132,9 @@ if (withAxe) {
   if (serious.length > 0) failed++;
 }
 
-console.log(`\n${captured.length} screenshot(s) in ${outDir}`);
+console.log(
+  noImages
+    ? `\n${captured.length} route(s) checked, no images written (--no-images)`
+    : `\n${captured.length} screenshot(s) in ${outDir}`,
+);
 process.exit(failed > 0 ? 1 : 0);
