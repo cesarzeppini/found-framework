@@ -27,7 +27,7 @@ If review finds something broken, it reports it — the fix goes back through bu
 
 **`checks/compliance`** — once, alongside the security audit, reading the spec's compliance surface plus the diff. Reports which legal documents this feature affects and why. **Advisory as a check; its consequences land in Ship**, which drafts the amendments into `out/legal/`. It never blocks — the question it raises is answered by a human with legal responsibility, and a blocking check would sit waiting.
 
-**`checks/code-quality`** — once, over the full diff, against any coding standards the repo documents plus a fixed smell baseline. This is the Standards half sitting next to the user-story test's Spec half above — a feature can pass one and fail the other. Breach of a documented standard is blocking; baseline smells are judgment calls that never block.
+**`checks/code-quality`** — once, over the full diff, against any coding standards the repo documents, plus Anthropic's `/code-review` plugin for correctness bugs and general simplification/reuse/efficiency. This is the Standards half sitting next to the user-story test's Spec half above — a feature can pass one and fail the other. Breach of a documented standard is blocking; `/code-review` correctness findings follow RULES.md's normal severity scale; its simplification-only findings are advisory.
 
 **`checks/design-quality`** — anti-pattern pass. Advisory. Output lands next to the screenshots so both get reviewed together.
 
