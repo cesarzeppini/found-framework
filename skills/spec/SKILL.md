@@ -1,6 +1,6 @@
 ---
 name: spec
-description: Writes work/<feature>/SPEC.md from context/ and the codebase, then stops for human approval — the first of the pipeline's two human stops. Reasoning tier. Derives what the codebase already answers, drafts what a human can correct faster than they can dictate, and asks only where being wrong is expensive. Triggers when a new feature is described and no approved spec exists yet.
+description: Writes work/<feature>/SPEC.md from context/ and the codebase, then stops for human approval — the first of the pipeline's two human stops. Reasoning tier. Derives what the codebase already answers, drafts what a human can correct faster than they can dictate, and asks only where being wrong is expensive. Triggers only for larger work — a new feature, module, or anything spanning multiple screens/files with real acceptance criteria — not small tweaks, one-off fixes, or copy changes. Those get built directly, no spec. Explicit ask ("spec this," "run found on this") always applies regardless of size.
 ---
 
 # Spec
