@@ -28,16 +28,29 @@ No `context/` — context always belongs to a project, never to the framework.
 
 ## Add it to a project
 
-From the project's repo root:
+Installed once per machine/environment, as a Claude Code plugin — not per project, and nothing to add to any project's own repo:
+
+```bash
+claude plugin marketplace add cesarzeppini/found-framework
+claude plugin install found@found
+```
+
+That's it. Every project you open on that machine/environment now has found's skills available. Explicit-only — see below — so it never runs unless you ask for it.
+
+**Cloud sessions:** each fresh container needs this run once too, same as any other plugin. Add the two commands above to the project's SessionStart hook so it happens automatically, alongside `npm install` and starting the dev server.
+
+Running in Codex instead? `AGENTS.md` in this repo ships with an unfilled capability tier map. The first run there fills it by detecting available models.
+
+<details>
+<summary>Old submodule setup (pre-plugin)</summary>
 
 ```bash
 git submodule add https://github.com/cesarzeppini/found-framework.git found
 mkdir -p .claude && ln -s ../found/skills .claude/skills
 ```
 
-Use a plain copy instead of a submodule while iterating early — the symlink is the same either way. `.claude/skills` is a symlink so skills are read in place; there is no build step.
-
-Running in Codex instead? `found/AGENTS.md` ships with an unfilled capability tier map. The first run there fills it by detecting available models.
+Kept here only for projects that haven't migrated yet. New projects should use the plugin install above.
+</details>
 
 ## The three prompts
 
@@ -100,13 +113,13 @@ Nothing in `out/` is published by the pipeline. Publishing is yours.
 
 ## Updating the framework
 
-A fix to a skill here reaches every project that pulls it.
+A fix to a skill here reaches every project on that machine/environment the next time a fresh session installs the plugin — installs always pull the latest push, there's no separate per-project pull step to remember.
 
 ```bash
-git -C found pull origin main     # or: git submodule update --remote found
+claude plugin marketplace update found   # or reinstall: claude plugin install found@found
 ```
 
-When a run proposes a skill change, approving it means applying that diff **in this repo** and committing — then projects pick it up on their next pull. Commit one skill at a time; the history is the rollback when an edit makes a skill worse.
+When a run proposes a skill change, approving it means applying that diff **in this repo** and committing — every subsequent session picks it up automatically. Commit one skill at a time; the history is the rollback when an edit makes a skill worse. There's no per-project bump step anymore, which also means a bad push reaches every project's next session immediately — there's no staging.
 
 Skills are edited in place. No compilation, no generated copies, nothing to keep in sync.
 
@@ -114,7 +127,7 @@ Skills are edited in place. No compilation, no generated copies, nothing to keep
 
 Node 18+ for the scripts. Playwright and `@axe-core/playwright` are needed for screenshots and the a11y check — standing them up in a project is Stage 0's job, not yours. Scripts exit `2` when a harness is missing and `1` for real findings, so setup failures never look like clean runs.
 
-**One Claude Code plugin**, installed once per machine — not per project, and not carried by the `found` submodule itself:
+**One more Claude Code plugin**, installed once per machine/environment alongside found itself:
 
 ```bash
 claude plugin marketplace add openai/codex-plugin-cc

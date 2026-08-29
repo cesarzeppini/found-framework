@@ -1,0 +1,17 @@
+{
+  "name": "found",
+  "description": "Found framework — spec-to-ship pipeline, installable as a Claude Code plugin.",
+  "owner": {
+    "name": "cesarzeppini",
+    "email": "cesarzeppini@gmail.com"
+  },
+  "plugins": [
+    {
+      "name": "found",
+      "source": "./",
+      "description": "A pipeline that turns one written spec into a shipped feature plus the collateral it earns — changelog, blog, social, email, case study — with a human gate before anything goes public. Never triggers automatically; runs only when explicitly asked for.",
+      "version": "1.0.0",
+      "category": "productivity"
+    }
+  ]
+}
