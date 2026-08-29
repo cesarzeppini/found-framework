@@ -27,7 +27,7 @@ Read `CODING_STANDARDS.md`, `CONTRIBUTING.md`, or whatever `context/STACK.md` na
 
 `--high` because this runs at end-of-feature, not as a quick local pass — broader coverage is worth the extra findings here. Fold its findings into this check's report by category (below), rather than repeating them as a separate section.
 
-Installed once per machine via Claude Code's plugin marketplace, not per project — same install model as the `codex-plugin-cc` plugin in `skills/review/SKILL.md`. **If it isn't installed or reachable, say so plainly in the report and continue** — the documented-standards pass above still runs; only the bug-hunting half is missed for this run.
+Bundled with Claude Code itself — unlike the `codex-plugin-cc` plugin in `skills/review/SKILL.md`, there's no separate marketplace install. **If `/code-review` isn't available in the harness this runs in, say so plainly in the report and continue** — the documented-standards pass above still runs; only the bug-hunting half is missed for this run.
 
 **The repo overrides.** A documented standard always wins over anything `/code-review` flags — where it endorses something the plugin would flag, note the override and don't report it.
 

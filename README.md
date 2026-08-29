@@ -114,7 +114,7 @@ Skills are edited in place. No compilation, no generated copies, nothing to keep
 
 Node 18+ for the scripts. Playwright and `@axe-core/playwright` are needed for screenshots and the a11y check — standing them up in a project is Stage 0's job, not yours. Scripts exit `2` when a harness is missing and `1` for real findings, so setup failures never look like clean runs.
 
-**Two Claude Code plugins**, installed once per machine — not per project, and not carried by the `found` submodule itself:
+**One Claude Code plugin**, installed once per machine — not per project, and not carried by the `found` submodule itself:
 
 ```bash
 claude plugin marketplace add openai/codex-plugin-cc
@@ -122,6 +122,8 @@ claude plugin install codex@openai-codex
 codex login
 ```
 
-Used by `skills/review/SKILL.md` for the cross-harness review swap, and by `skills/checks/code-quality/SKILL.md`'s `/code-review` call for correctness bugs and simplification. Both checks fall back gracefully (same-harness reasoning tier; documented-standards only) if a plugin isn't reachable, so a run never breaks over this — it's just weaker without them.
+Used by `skills/review/SKILL.md` for the cross-harness review swap. Falls back to same-harness reasoning tier if unreachable, so a run never breaks over this — it's just weaker without it.
 
-**In a cloud session**, a fresh container has neither plugin installed by default. Add the install commands above to that project's SessionStart hook so every new session gets them automatically, the same way it would install `node_modules` or start a dev server.
+`skills/checks/code-quality/SKILL.md` also calls `/code-review` for correctness bugs and simplification — that one ships bundled with Claude Code itself, no separate install needed.
+
+**In a cloud session**, a fresh container has Codex's plugin uninstalled by default (`/code-review` works out of the box, being bundled). Add the Codex install commands above to that project's SessionStart hook so every new session gets it automatically, the same way it would install `node_modules` or start a dev server.
