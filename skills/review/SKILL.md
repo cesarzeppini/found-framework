@@ -1,11 +1,11 @@
 ---
 name: review
-description: End-of-feature pass over the diff against SPEC.md — user-story test, screenshots of every affected route, then a11y, security-audit, compliance, design-quality and design-system-guard running in parallel on the same diff. Reasoning tier, writes no code, and runs in the harness that did not build. Triggers when every slice in tasks.md has passed.
+description: End-of-feature pass over the diff against SPEC.md — user-story test, screenshots of every affected route, then a11y, security-audit, compliance, code-quality, design-quality and design-system-guard running in parallel on the same diff. Reasoning tier, writes no code, and runs in the harness that did not build. Triggers when every slice in tasks.md has passed.
 ---
 
 # Review
 
-Read the diff against `SPEC.md` and `context/`. Reasoning tier. **Writes no code.**
+Read the diff against `SPEC.md` and `context/` — GLOSSARY.md included, plus `docs/adr/` for the area touched, if it exists. Reasoning tier. **Writes no code.**
 
 If review finds something broken, it reports it — the fix goes back through build. A reviewer that patches what it finds stops being able to tell you how good the build was.
 
@@ -27,11 +27,13 @@ If review finds something broken, it reports it — the fix goes back through bu
 
 **`checks/compliance`** — once, alongside the security audit, reading the spec's compliance surface plus the diff. Reports which legal documents this feature affects and why. **Advisory as a check; its consequences land in Ship**, which drafts the amendments into `out/legal/`. It never blocks — the question it raises is answered by a human with legal responsibility, and a blocking check would sit waiting.
 
+**`checks/code-quality`** — once, over the full diff, against any coding standards the repo documents plus a fixed smell baseline. This is the Standards half sitting next to the user-story test's Spec half above — a feature can pass one and fail the other. Breach of a documented standard is blocking; baseline smells are judgment calls that never block.
+
 **`checks/design-quality`** — anti-pattern pass. Advisory. Output lands next to the screenshots so both get reviewed together.
 
 **`checks/design-system-guard`** — across the whole diff, catching drift the per-slice runs missed. Parked cases from the slices resurface here, either resolved by a later slice or still listed.
 
-The five checks read the same diff independently, so **they can run in parallel** — one subagent each. A harness without subagents runs them in order and produces the same output.
+The six checks read the same diff independently, so **they can run in parallel** — one subagent each. A harness without subagents runs them in order and produces the same output.
 
 security-audit and compliance read the same surface for different consequences, so a finding in one often implies a finding in the other — a new third-party processor is both a key to protect and a sub-processor to disclose. Run them independently anyway; correlating them is the report's job, not theirs.
 

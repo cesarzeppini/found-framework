@@ -11,11 +11,15 @@ Execute `work/<feature>/tasks.md`. Standard tier unless a task package says othe
 
 Before any feature work, a pass over the existing codebase and database to make it ready for what's arriving: refactors, renames, extractions, dead code removal, schema changes the incoming feature needs.
 
-Read SPEC.md so you know what to prepare for. **Ship no feature behaviour.**
+Read SPEC.md so you know what to prepare for, and `context/GLOSSARY.md` so renames and extractions land on the project's own vocabulary rather than inventing a parallel one. **Ship no feature behaviour.**
+
+If a prep task makes a call that's hard to reverse, would surprise a reader without the context, and came from a real trade-off, write it to `docs/adr/` before moving on — the three-part test in `templates/ADR-FORMAT.md`. Most prep tasks don't clear that bar; don't manufacture one that isn't there.
 
 **The gate: tests still pass and the app behaves identically.** If behaviour changed, it wasn't a refactor — revert and recut the task.
 
 If the project has no test runner, standing one up is Stage 0's job; the slice gates have nothing to run otherwise. Same for the screenshot harness if it isn't configured. Stage 0 is sequential throughout.
+
+A task Plan marked **human-required** — a credential, a dashboard click-through, a one-off migration only a human should run — is not attempted and not a retry target. See [`references/wizard.md`](references/wizard.md): generate the setup script it describes, then end the run into the report naming the script's path. This is the unmet-assumption case in RULES.md, not a blocking-gate failure.
 
 ## Then slices
 
@@ -24,6 +28,10 @@ Each slice, in order:
 **implement → write the test for the new behaviour → run the full suite → pass, or stop.**
 
 Not "build now, test later." A slice that passes only because no test exists for it hasn't passed. The failure this prevents is building ten slices and discovering at review that slice three never worked.
+
+Write the test through the **seam** the task package named, not whichever one is easiest to reach from inside the slice. A test that goes around the named seam to assert on something else is a sign the seam was wrong, not licence to pick a new one mid-slice — recut the task package's seam and park the discrepancy instead.
+
+A test that exists is not the same as a test that protects the slice. Before running the suite, check the test just written against [`references/good-tests.md`](references/good-tests.md) — the two failure modes that make a green suite meaningless: a test coupled to how the behaviour is implemented rather than what it does, and a test whose expected value is derived the same way the code derives it, so it can't disagree with a wrong answer. Both pass the suite and protect nothing.
 
 Run the **full** suite, not just the new test. The new test passing while an old one breaks is the single most common way a slice looks green and isn't.
 
@@ -35,7 +43,9 @@ If a slice is marked test-exempt, say so out loud in its result line. An exempti
 
 Fix it. Blocking never means waiting for a human: attempt the fix, re-run, and repeat up to the bounded retry limit in RULES.md, unless the task package sets a different one.
 
-If it still fails, **end the run** and hand the report what failed, at which slice, what was attempted, and the last error. Do not proceed to the next slice on a red suite, and do not sit waiting for input.
+Three attempts spent guessing at the same fix from three angles is three attempts wasted. See [`references/diagnosing-failures.md`](references/diagnosing-failures.md) for spending them well: confirm and minimise the failure first, rank falsifiable hypotheses before the first attempt, and spend each attempt on the next untested one rather than a variation of the last.
+
+If it still fails, **end the run** and hand the report what failed, at which slice, the ranked hypotheses and what each attempt actually showed, and the last error. Do not proceed to the next slice on a red suite, and do not sit waiting for input.
 
 ## The minimum-viable rule
 
@@ -87,4 +97,5 @@ At the end of the build, hand back briefly:
 
 - anything invented that the spec didn't ask for, and why the slice needed it
 - anything in the existing setup that changed beyond Stage 0's plan
+- **any ADR written during Stage 0**, and why it cleared the three-part test
 - **where you'd argue with the spec**: criteria that turned out untestable, states that didn't exist, copy that didn't survive contact with the interface. Build is where a spec's wishful thinking becomes concrete, and nothing downstream will notice it as clearly.

@@ -20,9 +20,13 @@ Delete the markers and the guidance lines when writing a project's real file. Wh
 
 **Company-level** — COMPANY.md, BRAND.md, CHANNELS.md. Written once and shared across that company's projects.
 
-**Project-level** — PRODUCT.md, DESIGN.md, tokens.css, STACK.md, DISTRIBUTION.md. Per product.
+**Project-level** — PRODUCT.md, DESIGN.md, tokens.css, STACK.md, DISTRIBUTION.md, GLOSSARY.md. Per product.
 
 "Company" means *that project's company*. A client's COMPANY.md describes the client, not you.
+
+## Decisions live outside context/
+
+`GLOSSARY.md` is the domain vocabulary; the decisions behind it are architecture decision records in the project repo's `docs/adr/`, not a context file — see [`../ADR-FORMAT.md`](../ADR-FORMAT.md) for the format and when one is warranted. `docs/adr/` is created lazily, the first time a decision needs it.
 
 ## Boundary
 

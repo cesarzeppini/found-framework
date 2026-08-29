@@ -60,7 +60,7 @@ Between them the run is unattended. That is the whole point: the human trades fi
 
 **Build** — standard tier. Stage 0 prep, then slices in order, each gated on implement → test → full suite. A failing slice blocks the next; bounded fix attempts, then terminate into the report.
 
-**Review** — reasoning tier, in the other harness where the MCP link exists, otherwise same harness with the fallback noted. User-story test, screenshots, then the five checks in parallel. Blocking findings go back to build for the retry limit.
+**Review** — reasoning tier, in the other harness where the MCP link exists, otherwise same harness with the fallback noted. User-story test, screenshots, then the six checks in parallel. Blocking findings go back to build for the retry limit.
 
 **Ship** — light tier for copy. Tier × channel fan-out, all channels in parallel, everything into `out/`, unpublished.
 

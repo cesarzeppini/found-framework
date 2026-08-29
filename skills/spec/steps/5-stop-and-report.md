@@ -8,5 +8,6 @@ Alongside the draft, **report decisions, not activity** (RULES.md). Not which fi
 
 - which overrides you drafted, and the risk each one answers
 - what you derived but weren't certain of, which should already be in Assumptions
-- **contradictions found between context files** — COMPANY.md describing two people while PRODUCT.md implies enterprise scale is the kind of thing only spec work surfaces, and it invalidates far more than this feature
+- **contradictions found between context files** — COMPANY.md describing two people while PRODUCT.md implies enterprise scale is the kind of thing only spec work surfaces, and it invalidates far more than this feature. Includes the diff's own vocabulary: a term the codebase uses one way while GLOSSARY.md defines it another, or a choice this spec is about to make that a standing `docs/adr/` entry already ruled on
+- **glossary terms added or resolved this round** — new or contested terms drafted into GLOSSARY.md's canonical form, so approving the spec also confirms the vocabulary rather than silently changing it
 - where you'd argue with the request itself: a feature whose stated intent doesn't match what was asked for is cheapest to challenge here, before a plan is cut against it

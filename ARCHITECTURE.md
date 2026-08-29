@@ -29,6 +29,11 @@ found/
   RULES.md               operating rules and standing constraints — the shared source
   CLAUDE.md              thin: points at RULES.md, skills/, context/ + tier map
   AGENTS.md              thin: same content, for Codex and anything reading AGENTS.md
+  references/
+    writing-skills.md     house style for every skill, step file and reference
+                          file in this repo — the two loads, progressive
+                          disclosure, leading words, no-op pruning. Consulted
+                          whenever a skill is hand-edited or regenerated.
   skills/                canonical, harness-neutral
     run/                 orchestrator: chains plan → build → review → ship after spec approval
     visualize/           vendored from display-dev/visualize — branded HTML artifacts
@@ -42,6 +47,8 @@ found/
       a11y/
       voice-guard/
       security-audit/
+      compliance/
+      code-quality/
       design-quality/
   agents/                predefined only — jobs identical on every run
     finish-reviewer.md
@@ -62,6 +69,9 @@ found/
                          derivable from the codebase vs what must be asked.
                          The project-setup interview reads these to create a
                          project's real context/.
+    ADR-FORMAT.md        format and the three-part test for a project's own
+                         docs/adr/ — not a context file, since a decision is a
+                         record of the past rather than a standing fact.
 ```
 
 The framework repo has **no context/ of its own** — context always belongs to a project.
@@ -72,11 +82,15 @@ And per project repo:
 <project>/
   context/               this project's facts — see Context files
     COMPANY.md PRODUCT.md BRAND.md DESIGN.md tokens.css
-    CHANNELS.md STACK.md DISTRIBUTION.md
+    CHANNELS.md STACK.md DISTRIBUTION.md GLOSSARY.md
+  docs/
+    adr/                 architecture decision records — see templates/ADR-FORMAT.md.
+                         Created lazily; doesn't exist until the first decision needs it.
   work/
     <feature>/
       SPEC.md
       tasks.md
+      wizard-<slug>.sh   only when a Stage 0 task is human-required; disposable
       out/
   found/                 submodule or copy of the framework repo
   .claude/
@@ -114,6 +128,12 @@ This file is what stops the pipeline building bulletproof scalable infrastructur
 STACK.md changes what the spec has to ask about. If Supabase Auth is already in place, "session handling must be production-grade" is satisfied by default and the spec skill doesn't need to raise it.
 
 **DISTRIBUTION.md** — which channels are on for this product, who approves, and the tier definitions (below).
+
+**GLOSSARY.md** — this project's domain vocabulary: the terms that mean something specific here, opinionated where several words compete, with the losers listed under `_Avoid_`. Spec drafts against it, Build names against it, Review checks the diff for drift from it. Starts sparse and grows as Spec resolves a new or contested term — never a separate interruption, folded into the normal draft-and-approve flow.
+
+### Decisions — docs/adr/
+
+Architecture decision records live in the **project repo**, at `docs/adr/`, not in `context/` — a decision is a record of the past, not a standing fact the pipeline recalibrates against every run the way COMPANY.md is. `templates/ADR-FORMAT.md` holds the format and the three-part test for when one is warranted (hard to reverse, surprising without the context, the result of a real trade-off). Written by Plan or Build when slicing or Stage 0 surfaces a call that clears the bar; read by Spec, Plan, Build and Review for the area they're touching, alongside `context/`, so nobody quietly re-litigates or contradicts a standing decision. `docs/adr/` is created lazily — the directory doesn't exist until the first decision needs it.
 
 ### Boundary rules
 
@@ -182,9 +202,11 @@ Not a questionnaire. Three buckets, and only one of them involves asking.
 
 **Actually ask.** Only where derivation is impossible and being wrong is expensive: why now and what changes for the user, the success metric, and anything genuinely blocking.
 
-Every asked item arrives as a **proposal with its reasoning**, never as an open question — a human edits a proposal far faster than they generate an answer, and a bare "what do you want?" hands back the work the spec skill exists to do. Ask open only where no defensible default exists; if that happens often, the gap is in `context/`.
+Every asked item arrives as a **numbered proposal with a recommended answer**, never as a bare open question — a human edits a proposal far faster than they generate an answer, and a bare "what do you want?" hands back the work the spec skill exists to do. Formatted per `steps/4-check-and-present.md`: a numbered, titled question, then the recommended answer with its reasoning on its own line, so an answer can reference "2: yes" instead of restating the question. Ask genuinely open only where no defensible default exists; if that happens often, the gap is in `context/`.
 
-Flow: read the codebase and context → write the full draft → **state the detected picture in one line** → present a short list of real questions → revise. **One round of questions, not twenty.**
+**Facts are the skill's job, never the human's.** A question answerable by reading the codebase, the database, or a live page belongs in step 1, not the round — the round exists only for what can't be derived and where a wrong default is expensive.
+
+Flow: read the codebase and context → write the full draft → **state the detected picture in one line** → present the numbered question round → revise. **One round, not an iterated interview** — unlike an open-ended grilling session this round doesn't reopen once answered; if a second round feels necessary, the missing thing usually belonged in assumptions.
 
 The detection line — stack, what exists, what's missing — is one sentence and catches a wrong assumption before it propagates. Deriving silently is right; saying nothing about what was derived is not.
 
@@ -243,7 +265,7 @@ SPEC.md → `tasks.md`.
 
 **Cut by vertical slice, not by layer.** Not all database, then all API, then all frontend. Each slice is the smallest change that touches every layer it needs and can be tested on its own. Layer-first means building a backend against a predicted frontend, then rewriting it when the frontend turns out different.
 
-A slice is only valid if Plan can state how it would be tested. If it can't, the slice is cut wrong.
+A slice is only valid if Plan can name the seam it would be tested through and state how it would be tested against that seam. If it can't, the slice is cut wrong.
 
 #### tasks.md structure
 
@@ -254,9 +276,12 @@ A slice is only valid if Plan can state how it would be tested. If it can't, the
 - what to do
 - which context files to read
 - capability tier
-- test expectation — what passing looks like, written before the slice is built
+- **seam** — the public boundary the test observes: the route, the exported function, the interface a real caller goes through. Named before the test expectation, since an expectation written first tends to describe the mechanism rather than the behaviour.
+- test expectation — what passing looks like, written before the slice is built, checked against the named seam
 - test-exempt flag for low-risk slices (copy changes, styling). Explicit and visible, never a silent skip.
 - whether it can run in parallel with others, or must wait
+
+Build tests through the seam the task package named rather than whichever one is convenient from inside the slice — see `skills/build/references/good-tests.md` for the two ways a test can pass the suite without actually protecting the seam.
 
 **Feature tier** — fix / feature / milestone. Drives the Ship fan-out.
 
@@ -276,13 +301,19 @@ It reads SPEC.md so it knows what to prepare for, but it ships no feature behavi
 
 If the project has no test runner, standing one up is Stage 0's job — otherwise the slice gates have nothing to run. Same for Playwright if screenshots aren't set up.
 
+**Some prerequisites need a human, not an agent** — a credential, a third-party account, a dashboard click-through, a one-off production migration nobody wants run unattended. Plan tags these Stage 0 tasks **human-required** rather than folding them into an automatable one. Build doesn't attempt them and doesn't spend the bounded retry budget on them — this is the unmet-assumption case in RULES.md, not a failing gate. Instead it generates a small interactive script (`skills/build/references/wizard.md`, template at `wizard-template.sh`) that walks the human through the exact steps — opens the right URL, asks for the value, writes it to `.env` or a CI secret — written to `work/<feature>/wizard-<slug>.sh`, disposable unless the human asks to keep it. The run ends into the report naming the script; re-invoking build resumes Stage 0 once the human has run it.
+
 #### Then slices
 
 Each slice: **implement → write the test for the new behaviour → run the full suite → pass, or stop.**
 
 Not "build now, test later." A slice that passes only because no test exists for it hasn't passed. The failure mode this prevents: building ten slices and discovering at review that slice three never worked.
 
+A green suite isn't proof the test was worth writing — `skills/build/references/good-tests.md` names the two ways a test passes without protecting anything: coupled to the implementation instead of the behaviour, or tautological (its expected value derived the same way the code derives it, so a wrong answer agrees with itself). The gate checks against that reference before moving on, not just against the suite's exit code.
+
 A failing slice blocks the next one. Sequential by default. Parallelism only where two slices are provably independent — which is rarer than it looks, since slices tend to depend on each other by design.
+
+RULES.md's three bounded fix attempts say *how many*; `skills/build/references/diagnosing-failures.md` says how to spend them — confirm and minimise before the first attempt, rank falsifiable hypotheses, spend each attempt on the next untested one rather than a variation of the last. If all three are spent and the slice is still red, the report carries the ranked hypotheses and what each attempt showed, not just the final error — otherwise whoever picks this up next starts from hypothesis one again.
 
 UI-touching slices also run `checks/design-system-guard`. Auto-fixes apply inside the slice; ambiguous cases don't block — they're parked and surface in the final report next to the screenshots.
 
@@ -315,6 +346,7 @@ Two levels:
 - `checks/a11y` — axe-core over the same Playwright run. Blocking.
 - `checks/security-audit` — once, reading the security surface plus the full diff. Blocking; unresolvable high-severity findings end the run into the final report.
 - `checks/compliance` — once, alongside the security audit. Reads the compliance surface plus the diff and reports which legal documents are affected and why. Advisory as a check; its consequences land in Ship.
+- `checks/code-quality` — once, over the full diff. The Standards half next to the user-story test's Spec half above — a feature can pass one and fail the other. Breach of a documented repo standard is blocking; a fixed smell baseline on top is judgment, never blocking.
 - `checks/design-quality` — anti-pattern pass. Advisory, output next to the screenshots so both get reviewed together.
 - `checks/design-system-guard` across the whole diff, catching drift the per-slice runs missed. Fully automated; parked cases from the slices resurface here, resolved or listed for the final report.
 
@@ -424,6 +456,7 @@ Not stages. Invoked by stages.
 | security-audit | once, after all slices | yes |
 | compliance | once, at review | no, feeds Ship |
 | voice-guard | on Ship's copy, and user-facing strings in build | yes |
+| code-quality | end of feature | breach of a documented standard, yes; baseline smells, no |
 | design-quality | end of feature | no, advisory |
 
 Each check follows the same shape: a deterministic script for what machines catch, written judgment for what they can't, an explicit "park, don't guess" rule, and a fixed report format.
@@ -432,7 +465,7 @@ Each check follows the same shape: a deterministic script for what machines catc
 
 A detector with non-trivial logic keeps tests beside it (`<name>.test.mjs`, run with `node --test`), and every test corresponds to a bug that check actually shipped or a rule it depends on.
 
-Exceptions, deliberate: `security-audit`, `compliance` and `design-quality` are judgment-only, with no script. A detector for these would produce confident false negatives on exactly the cases they exist to catch — the free-text field that collects personal data without being named for it. The one narrow exception is compliance's dependency signal: new packages and new third-party network calls are reliably detectable and map straight to "new processor" and "new tracker," so a script flags those and feeds the judgment layer. It never decides.
+Exceptions, deliberate: `security-audit`, `compliance`, `code-quality` and `design-quality` are judgment-only, with no script. A detector for these would produce confident false negatives on exactly the cases they exist to catch — the free-text field that collects personal data without being named for it, the duplicated logic shape a line-based scanner can't recognise as duplicated. The one narrow exception is compliance's dependency signal: new packages and new third-party network calls are reliably detectable and map straight to "new processor" and "new tracker," so a script flags those and feeds the judgment layer. It never decides.
 
 ### Severity and retry thresholds
 
@@ -454,6 +487,14 @@ It also flags **any appearance override on an approved component, with no token 
 The final report carries a **Component registry** section: the approved components, then every unmarked component imported anywhere with its import count, then a count of the unmarked and unimported (a count, never a listing — nothing depends on them, so they are inventory rather than decisions). It reads the **whole codebase, not the run's diff**: in a new project the codebase is the backlog, and a component in use since before the framework was installed appears in no diff and would never surface. Inventory, not a finding — it doesn't block, and it shrinks as components get marked. **Only the human adds that marker** — an agent may add it when asked to in the moment, never on its own initiative, because an agent that can approve its own components turns the check into a mirror. Any marker added during a run is listed in the final report as a Needs-you item, **even when a human asked for it**: a report filed only when the agent thinks it necessary is one the agent can decide not to file, so the listing is unconditional and review detects added markers from the diff rather than trusting the report. Token allowlist derives from tokens.css, runs per UI slice plus full-diff at review, parks instead of halting.
 
 On request, it also **generates a `/components` page** documenting every currently-approved component and token — a living reference, regenerated on demand, never a hand-maintained registry and never itself the source of approval (that's still the marker). Documentation only: no new CSS, no new primitives, nothing that changes how the app looks anywhere else. This reverses an earlier call to leave the page as project work with no framework opinion on its shape — the shape is framework-documented now, since every project needs the same one, but the page itself is still built per project, through the normal pipeline, from that project's own approved components. It doesn't become shared or centrally versioned infrastructure.
+
+### code-quality
+
+The Standards half of review, next to the user-story test's Spec half: a feature can pass one and fail the other, and reporting them separately is what stops one masking the other. Distinct from design-system-guard, which enforces approved components and tokens — this judges whether the code itself, UI or not, is shaped well.
+
+Reads the full diff against whatever the repo documents about its own conventions (`CODING_STANDARDS.md`, `CONTRIBUTING.md`, or `STACK.md`'s "How it was built"), plus a fixed baseline of twelve Fowler smells that applies regardless of what's documented. **The repo overrides**: a documented standard always wins over the baseline. Judgment-only, no script, for the same reason as `security-audit` — duplicated logic and a misleading name are shape judgments a line-based scanner can't make reliably, and what the project's own linter and type checker already enforce is exactly the layer this check must not re-flag.
+
+Severity departs from RULES.md's usual scale on purpose: a smell has no user-facing impact to rate, so severity here tracks whether a documented rule was broken instead. Breach of a **documented** standard is blocking, per RULES.md's retry limit. A **baseline smell** is always advisory, however severe it looks — these are judgment calls about shape, not defects, and none of them earns the right to halt an unattended run.
 
 ### voice-guard
 
@@ -553,6 +594,22 @@ Deliberately not taking: the multi-harness compile step (symlinks and a shared R
 
 ---
 
+## Worth taking from Matt Pocock's skills
+
+His repo is a toolbox of small, human-driven commands rather than a pipeline, so most of it doesn't transplant directly — but several of its reference disciplines strengthened checks and steps this framework already had:
+
+- **`writing-for-agents` as the house style** for every skill in this repo — `references/writing-skills.md`, above. The rest of his repo is what that skill is a style guide *for*; this is the one piece that governs how every other piece gets written.
+- `tdd`'s anti-patterns (implementation-coupled, tautological) — `skills/build/references/good-tests.md`, checked before a slice's test is trusted.
+- `code-review`'s Standards-vs-Spec split — `skills/checks/code-quality/`, sitting next to the user-story test as review's other axis.
+- `diagnosing-bugs`'s falsifiable-hypothesis loop, condensed to fit inside three bounded, unattended fix attempts instead of an open-ended interactive session — `skills/build/references/diagnosing-failures.md`.
+- `domain-modeling`'s glossary discipline and ADR test — `context/GLOSSARY.md` and `templates/ADR-FORMAT.md`.
+- `grilling`'s numbered-question-with-a-recommended-answer format, kept to Found's single question round rather than his iterated frontier — `skills/spec/steps/4-check-and-present.md`.
+- `wizard`'s generated-script pattern for a step only a human can take, reframed from a chat aside into the unmet-assumption exit RULES.md already has — `skills/build/references/wizard.md` and `wizard-template.sh`.
+
+Deliberately not taking: the issue-tracker/triage/wayfinder machinery (tasks.md and the two-stop model already cover that ground), `ask-matt`'s router (six pipeline skills chained by `run` need no router), `handoff` and `teach` (no session-to-session handoff problem in an unattended run).
+
+---
+
 ## Open items
 
 1. ~~How the cross-harness review actually runs~~ — resolved: the `codex-plugin-cc` plugin runs Codex review from inside Claude Code via `/codex:adversarial-review`, steered to execute the review skill. No MCP server, no harness switch. Same-harness fallback when Codex isn't reachable.
@@ -576,7 +633,7 @@ Create an empty folder, `git init` it (Claude Code can do this), drop this file 
 
 Same session. Prompt:
 
-> Read ARCHITECTURE.md. Build the skills in skills/ — run, spec, plan, build, review, ship — plus the remaining checks (a11y, voice-guard, security-audit, design-quality), the predefined agents in agents/, scripts/screenshots.mjs and scripts/prose-lint.mjs, and the context templates in templates/context/. Follow the doc exactly: no code in specs, vertical slices, tests per slice, two human stops, park-don't-ask, blocking-never-waits, capability tiers, harness-neutral wording. One skill at a time, show me each before moving on.
+> Read ARCHITECTURE.md. Build the skills in skills/ — run, spec, plan, build, review, ship — plus the remaining checks (a11y, voice-guard, security-audit, design-quality), the predefined agents in agents/, scripts/screenshots.mjs and scripts/prose-lint.mjs, and the context templates in templates/context/. Follow the doc exactly: no code in specs, vertical slices, tests per slice, two human stops, park-don't-ask, blocking-never-waits, capability tiers, harness-neutral wording, and the house style in references/writing-skills.md. One skill at a time, show me each before moving on.
 
 Review each skill like a spec. This is where the doc's decisions either land in the files or silently don't.
 
