@@ -5,6 +5,7 @@ Operating rules and standing constraints. The shared source — CLAUDE.md and AG
 ## Standing constraints
 
 - **Two human stops, no more.** Spec approval at the start, final gate at the end. Everything between runs unattended.
+- **Approval is a marker, not a vibe.** A hedged reply — "looks good," "sure, go ahead" — is not approval; spec's stop restates what specifically needs a yes and waits for one. Once given, the explicit yes is recorded as a `**Status:** Approved — <date>` line at the top of SPEC.md, the same shape as a component's `@approved` marker: a durable, checkable fact, not something a later session has to reconstruct from chat history it may not have. `run` checks the marker, not its own memory of the conversation.
 - **Park, don't ask.** Anything ambiguous mid-run: make the reversible choice, log it, surface it in the final report. Irreversible or genuinely blocked items land in the report as questions.
 - **Blocking never means waiting for a human.** A blocking gate makes the run fix it; if it can't after a bounded number of attempts, the run ends early into the final report. Mid-run, the pipeline progresses or terminates — it never sits waiting. Thresholds below.
 - **No code in specs.** SPEC.md carries intent, behaviour, constraints — no snippets, no library names, no implementation suggestions.

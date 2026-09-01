@@ -1,6 +1,6 @@
 ---
 name: code-quality
-description: Runs once at end of feature, checking the full diff against any coding standards the repo documents, and calling Anthropic's `/code-review` plugin for correctness bugs and general simplification/reuse/efficiency cleanup. The Standards half of review, next to the user-story test's Spec half — a feature can pass one and fail the other. Breach of a documented repo standard blocks; correctness bugs from `/code-review` are rated on RULES.md's normal scale; simplification-only findings stay advisory. Triggers during review, alongside the other checks.
+description: Runs once at end of feature, checking the full diff against any coding standards the repo documents, calling Anthropic's `/code-review` plugin for correctness bugs and general simplification/reuse/efficiency cleanup, and watching for the diff quietly weakening its own checks (a moved threshold, a skipped test, a new suppression comment, an unowned exception). The Standards half of review, next to the user-story test's Spec half — a feature can pass one and fail the other. Breach of a documented repo standard or a weakened check blocks; correctness bugs from `/code-review` are rated on RULES.md's normal scale; simplification-only findings stay advisory. Triggers during review, alongside the other checks.
 ---
 
 # code-quality
@@ -31,15 +31,28 @@ Bundled with Claude Code itself — unlike the `codex-plugin-cc` plugin in `skil
 
 **The repo overrides.** A documented standard always wins over anything `/code-review` flags — where it endorses something the plugin would flag, note the override and don't report it.
 
+## Guard the bar itself, not just the code
+
+An agent under pressure to turn a red check green doesn't craft clever workarounds — it takes the cheapest path to green, and the cheapest path is usually to weaken the thing doing the checking rather than fix what it's checking. This is the diff pattern that's invisible if code-quality only asks "is this code good": look instead for whether *the checks themselves* got quietly turned down. Five moves, checked against the diff every run:
+
+1. **A threshold moved.** A coverage or performance budget lowered, a lint rule downgraded or removed, a check dropped out of CI config — compare the project's lint/test/CI config against its state at the branch point.
+2. **A test got easier.** `.skip` added, a test file deleted, assertions pulled out of a test that stayed.
+3. **A checker got silenced.** A new `@ts-ignore`, `eslint-disable`, `# noqa`, `# type: ignore`, or equivalent suppression comment where none was there before.
+4. **Work is unfinished but looks done.** A stub that throws `Not implemented`, an empty `catch {}` swallowing a failure into silence, a `TODO` sitting where the real logic belongs.
+5. **An exception appeared with no owner.** A new allowlist entry, ignore-rule, or carve-out that nobody's name is attached to.
+
+None of these need new tooling — they're all visible in what the diff added or removed. **Always blocking**, regardless of what triggered it: an agent shouldn't be able to make its own gate easier to pass, and the fact that this pattern exists at all is worse news than any single finding it turns up. Tightening a check is never a finding; only loosening one is.
+
 ## Severity and blocking
 
-Two different rules, because the two halves aren't the same kind of finding:
+Three sources, three rules:
 
 | Source | Handling |
 |---|---|
 | Breach of a **documented** repo standard | Blocking, per RULES.md's retry limit. Survives its attempts → the run ends into the report. |
 | `/code-review` finding, category `correctness` | Rated and handled on RULES.md's normal severity scale (critical/serious block, moderate/minor park) — a real bug is a real bug regardless of which tool found it. |
 | `/code-review` finding, any other category (`simplification`, `efficiency`, reuse, altitude, …) | Always advisory. Never blocks, however severe it looks — these are judgment calls about form, not defects. |
+| A **guard-the-bar** finding (above) | Always blocking, regardless of how small the specific instance looks — the finding isn't the one suppressed line, it's that the gate got weakened at all. |
 
 **Park, don't guess** when a fix would change behaviour, not just shape — extracting a function is safe to do inline; restructuring how two modules communicate, or changing what a query returns, is a design decision the report should carry, not one this check makes unilaterally.
 
@@ -49,12 +62,14 @@ Two different rules, because the two halves aren't the same kind of finding:
 
 ```text
 code-quality
-Blocking (2)
+Blocking (3)
   CODING_STANDARDS.md#3   src/api/invites.ts      repo requires typed API responses;
                           this handler returns `any`
   correctness (high)      src/api/invites.ts:41   /code-review: tenant id read from
                           the request body, not the authenticated session — a client
                           can pass anyone's id
+  guard-the-bar           vitest.config.ts        coverage threshold lowered from
+                          80% to 60% in this diff to get the new slice's tests green
 Fixed (1)
   correctness (medium)    src/lib/format.ts:12    /code-review: off-by-one in the
                           pagination offset, fixed

@@ -135,6 +135,8 @@ STACK.md changes what the spec has to ask about. If Supabase Auth is already in 
 
 Architecture decision records live in the **project repo**, at `docs/adr/`, not in `context/` — a decision is a record of the past, not a standing fact the pipeline recalibrates against every run the way COMPANY.md is. `templates/ADR-FORMAT.md` holds the format and the three-part test for when one is warranted (hard to reverse, surprising without the context, the result of a real trade-off). Written by Plan or Build when slicing or Stage 0 surfaces a call that clears the bar; read by Spec, Plan, Build and Review for the area they're touching, alongside `context/`, so nobody quietly re-litigates or contradicts a standing decision. `docs/adr/` is created lazily — the directory doesn't exist until the first decision needs it.
 
+**One fresh-context check before writing it** — the session that made a hard-to-reverse call is the worst-placed to judge it, having just talked itself into it. A single separate subagent gets the decision and its constraints (never the reasoning that produced it, which would bias it toward agreeing) and is asked to find a problem, not confirm the call is fine. One pass, no loop, no cross-model tooling — ADR-worthy calls are already rare by the three-part test, so this doesn't need the heavier multi-round discipline a build-time doubt-check would. A real finding means reconsider before writing; nothing real means write the ADR as planned. Skipped only when no subagent is spawnable, and the skip is said out loud rather than passed off as an equivalent self-review.
+
 ### Boundary rules
 
 BRAND.md and DESIGN.md both sound like "brand." State the boundary in line one of each:
@@ -191,6 +193,8 @@ Reads context/, asks the gaps, writes `work/<feature>/SPEC.md`. Reasoning tier. 
 **The depth limit: naming the stack and naming the providers is allowed; anything more specific is implementation.** The spec may say the project runs on Supabase and that invitations go out through a transactional email provider — the builder needs to know what it is building against. It may not name the client library, the method, the table or the option. Stack and providers are facts about the ground; everything below them is a choice the builder makes.
 
 Enforced by a hook that rejects fenced code blocks in SPEC.md.
+
+**Approval is a marker, not a remembered reply.** A hedged "looks good" or "sure" doesn't count — step 5 restates the specific thing needing a yes and waits for one. Once given, it's written down as `**Status:** Approved — <date>`, the first line under the title, the same shape as a component's `@approved` marker. `run`'s precondition checks this line, not the conversation — a spec picked up in a later session or by a different agent is approved because the file says so. The line is removed on any revision and only re-added after the human confirms the new draft.
 
 #### How the spec gets written
 
@@ -312,6 +316,8 @@ Not "build now, test later." A slice that passes only because no test exists for
 A green suite isn't proof the test was worth writing — `skills/build/references/good-tests.md` names the two ways a test passes without protecting anything: coupled to the implementation instead of the behaviour, or tautological (its expected value derived the same way the code derives it, so a wrong answer agrees with itself). The gate checks against that reference before moving on, not just against the suite's exit code.
 
 A failing slice blocks the next one. Sequential by default. Parallelism only where two slices are provably independent — which is rarer than it looks, since slices tend to depend on each other by design.
+
+**A slice touching a third-party library feature this codebase hasn't used before checks the current official docs first** — `skills/build/references/source-check.md`. Narrowly scoped on purpose: skipped when an existing file already shows the same call (the common case, once a pattern's established), skipped entirely for internal logic, and never run at spec or review time — training data goes stale between library versions, and this is the one moment (first use, about to be written) where checking is cheap and being wrong is expensive.
 
 RULES.md's three bounded fix attempts say *how many*; `skills/build/references/diagnosing-failures.md` says how to spend them — confirm and minimise before the first attempt, rank falsifiable hypotheses, spend each attempt on the next untested one rather than a variation of the last. If all three are spent and the slice is still red, the report carries the ranked hypotheses and what each attempt showed, not just the final error — otherwise whoever picks this up next starts from hypothesis one again.
 
@@ -456,7 +462,7 @@ Not stages. Invoked by stages.
 | security-audit | once, after all slices | yes |
 | compliance | once, at review | no, feeds Ship |
 | voice-guard | on Ship's copy, and user-facing strings in build | yes |
-| code-quality | end of feature | breach of a documented standard, yes; baseline smells, no |
+| code-quality | end of feature | documented standard breach or a weakened check, yes; `/code-review` correctness, RULES.md scale; simplification-only, no |
 | design-quality | end of feature | no, advisory |
 
 Each check follows the same shape: a deterministic script for what machines catch, written judgment for what they can't, an explicit "park, don't guess" rule, and a fixed report format.
@@ -490,11 +496,13 @@ On request, it also **generates a `/components` page** documenting every current
 
 ### code-quality
 
-The Standards half of review, next to the user-story test's Spec half: a feature can pass one and fail the other, and reporting them separately is what stops one masking the other. Distinct from design-system-guard, which enforces approved components and tokens — this judges whether the code itself, UI or not, is shaped well.
+The Standards half of review, next to the user-story test's Spec half: a feature can pass one and fail the other, and reporting them separately is what stops one masking the other. Distinct from design-system-guard, which enforces approved components and tokens — this judges whether the code itself, UI or not, is correct and shaped well.
 
-Reads the full diff against whatever the repo documents about its own conventions (`CODING_STANDARDS.md`, `CONTRIBUTING.md`, or `STACK.md`'s "How it was built"), plus a fixed baseline of twelve Fowler smells that applies regardless of what's documented. **The repo overrides**: a documented standard always wins over the baseline. Judgment-only, no script, for the same reason as `security-audit` — duplicated logic and a misleading name are shape judgments a line-based scanner can't make reliably, and what the project's own linter and type checker already enforce is exactly the layer this check must not re-flag.
+Two jobs, two owners. **Documented standards** are this check's own judgment call, no script — reads `CODING_STANDARDS.md`, `CONTRIBUTING.md`, or `STACK.md`'s "How it was built"; what the project's own linter and type checker already enforce continuously is exactly the layer this must not re-flag. **Correctness bugs and general cleanup** are handed to Anthropic's bundled `/code-review --high` plugin rather than reinvented as a bespoke smell list — it already hunts these across a diff, and duplicating it without catching real defects was the earlier design. **The repo overrides**: a documented standard always wins over anything `/code-review` flags.
 
-Severity departs from RULES.md's usual scale on purpose: a smell has no user-facing impact to rate, so severity here tracks whether a documented rule was broken instead. Breach of a **documented** standard is blocking, per RULES.md's retry limit. A **baseline smell** is always advisory, however severe it looks — these are judgment calls about shape, not defects, and none of them earns the right to halt an unattended run.
+**Guards the bar itself, not just the code.** An agent under pressure to turn red green tends to weaken the check rather than fix what it's checking — a moved threshold, an easier test (`.skip`, a deleted assertion), a new suppression comment (`@ts-ignore`, `eslint-disable`), an unfinished stub, an unowned exception. All five are visible in the diff with no new tooling; unlike the other findings here, any one of them is **always blocking** regardless of how small it looks — the problem is that the gate moved at all, not the specific instance.
+
+Severity: breach of a **documented** standard is blocking, per RULES.md's retry limit. A `/code-review` **correctness** finding is rated on RULES.md's normal scale. Any other `/code-review` category (simplification, efficiency, reuse) is always advisory — a judgment call about form, not a defect. A **guard-the-bar** finding is always blocking.
 
 ### voice-guard
 

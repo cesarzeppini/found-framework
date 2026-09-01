@@ -4,6 +4,12 @@ End by presenting the draft and the question list, and stop. Do not continue int
 
 If the feature is trivial enough that the question list is empty, say so explicitly rather than inventing questions to justify the stop.
 
+## What counts as approval
+
+A hedged reply is not a yes. "Looks good," "sure," "go ahead" — treat these as **not yet approved**: restate the specific thing that still needs confirming ("to confirm: proceed with the draft as shown, including the recommended answers to Q1–Q3?") and wait for an unambiguous reply, the same discipline as the question round itself.
+
+Once given, write it down — don't rely on the conversation remembering it. Add `**Status:** Approved — <date>` as the first line under SPEC.md's title. This is the marker `run` checks before starting (see `skills/run/SKILL.md`'s preconditions); a spec picked up in a later session, or by a different agent, is approved because the file says so, not because someone recalls a chat from last week. If the draft changes after this line is added — a revision, a new answer — remove the line; it's re-added only after the human confirms the revised draft.
+
 Alongside the draft, **report decisions, not activity** (RULES.md). Not which files you read — briefly:
 
 - which overrides you drafted, and the risk each one answers

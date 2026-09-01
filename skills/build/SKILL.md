@@ -29,6 +29,8 @@ Each slice, in order:
 
 Not "build now, test later." A slice that passes only because no test exists for it hasn't passed. The failure this prevents is building ten slices and discovering at review that slice three never worked.
 
+Before implementing, check whether the slice is about to use a third-party library feature this codebase hasn't used before — if so, see [`references/source-check.md`](references/source-check.md) before writing that call. Skip this entirely when the slice is internal logic, or when an existing file already shows the same call in this codebase.
+
 Write the test through the **seam** the task package named, not whichever one is easiest to reach from inside the slice. A test that goes around the named seam to assert on something else is a sign the seam was wrong, not licence to pick a new one mid-slice — recut the task package's seam and park the discrepancy instead.
 
 A test that exists is not the same as a test that protects the slice. Before running the suite, check the test just written against [`references/good-tests.md`](references/good-tests.md) — the two failure modes that make a green suite meaningless: a test coupled to how the behaviour is implemented rather than what it does, and a test whose expected value is derived the same way the code derives it, so it can't disagree with a wrong answer. Both pass the suite and protect nothing.
@@ -97,5 +99,5 @@ At the end of the build, hand back briefly:
 
 - anything invented that the spec didn't ask for, and why the slice needed it
 - anything in the existing setup that changed beyond Stage 0's plan
-- **any ADR written during Stage 0**, and why it cleared the three-part test
+- **any ADR written during Stage 0**, why it cleared the three-part test, and what the pre-write check found (`templates/ADR-FORMAT.md`)
 - **where you'd argue with the spec**: criteria that turned out untestable, states that didn't exist, copy that didn't survive contact with the interface. Build is where a spec's wishful thinking becomes concrete, and nothing downstream will notice it as clearly.

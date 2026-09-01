@@ -32,7 +32,7 @@ Start only when **a human has approved the spec**. An unapproved SPEC.md is not 
 
 Check before starting:
 
-- SPEC.md exists and is approved
+- SPEC.md carries `**Status:** Approved — <date>` as the first line under its title — the marker `skills/spec/steps/5-stop-and-report.md` writes once a human gives an explicit yes. Don't infer approval from the conversation instead — a remembered "sounds good" from earlier in the chat is not the marker, and a spec picked up without that chat history (a new session, a different agent) has no way to tell the two apart. If the marker is missing, stop and send the human back through spec's step 5 to actually confirm, rather than starting on a good-faith guess.
 - no open question in it is marked blocking
 - `context/` exists, with at least COMPANY.md, PRODUCT.md and STACK.md
 
