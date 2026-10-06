@@ -32,6 +32,15 @@ This matters because the failure is silent in the worst way: an unlisted directo
 
 Never treat an omission as deliberate. A deliberate exclusion is written down — `components-ignore:` in STACK.md — for directories that genuinely aren't design-system components: icon sets, generated output, a legacy folder being retired. Anything not in either key is an unanswered question, and the resolution is a human's: list it, ignore it, or move it.
 
+### How to approve and revoke (when the human asks)
+
+- **Approve** ("mark Button as approved"): add `// @approved` as the **first line** of that component's file, change nothing else, and say you did it.
+- **Approve several** ("approve everything in use", "use what we have as the baseline"): the same for each file they name. If they named none, list the unmarked components that are imported somewhere (`ds-lint.mjs --registry`) and get them to confirm the list before touching anything.
+- **Revoke** ("remove approval from Button"): delete the marker line, change nothing else, and say how many files import it — they will be flagged from now on.
+- `ds-lint.mjs --approve <file>` / `--unapprove <file>` do exactly this and refuse any file outside the configured `components:` directories. They are human-initiated tools: **the pipeline never runs them on its own.**
+
+**First run on an existing project:** nothing is approved, so everything in use is flagged. Don't resolve that by approving things yourself — report the registry, most-used first, and let the human choose or take the "approve everything in use" baseline.
+
 ### Agents never add the marker
 
 **Only the human decides what is approved.** An agent may add `@approved` when — and only when — the human asks for it in that moment ("mark Button as approved"). Never on its own initiative.
@@ -100,7 +109,15 @@ On request — "generate the design system page," "show me what's approved" — 
 - Never invent a component to fill a gap on the page — render what's actually approved.
 - Safe to regenerate any time; it always reflects the current approved set, so there is no reason to hand-edit it between runs.
 
-This is a project's own route, built with this project's own components — not framework infrastructure, and not shared or versioned centrally. Building it is itself a UI-touching change, so it goes through the normal pipeline (spec it, build it) like any other feature; this section says what the page should contain when that happens.
+This is a project's own route, built with this project's own components — not framework infrastructure. Building it is itself a UI-touching change, so it goes through the normal pipeline (spec it, build it) like any other feature; this section says what the page should contain when that happens.
+
+### The status and approval page
+
+Separate from the reference page above, there is a ready-made **Design Guard page** at `template/Components.tsx` (synced from the standalone design-guard repo — see `scripts/sync-design-guard.mjs`). It is a dev-only triage view: stats, **Decisions waiting** (unmarked components in use, most-used first), the approved list, status badges, variants, props, usage, a first-time guide, and Approve / Revoke buttons. Those buttons **copy a prompt** for the human to paste into the chat; the page never edits a file. An approve-all-in-use button gives the baseline.
+
+It needs Vite (it reads source with `import.meta.glob`) and must be registered only when `import.meta.env.DEV` is true so it never ships. It reads the shared `scripts/scan-core.mjs`, so copy both next to each other. Install steps are in the standalone README; if a project builds both pages, put this one at `/design-guard` and leave `/components` for the reference above.
+
+Optional: `ds-lint.mjs --serve` runs a localhost-only helper the page detects automatically, so its buttons edit files directly. Human-run only; a local process (including an agent with shell access) can read its token, so `--added-markers` remains the backstop.
 
 ## Tokens
 

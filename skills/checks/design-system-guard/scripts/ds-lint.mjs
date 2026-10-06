@@ -5,6 +5,10 @@
 //   ds-lint.mjs <file-or-dir> [...]          lint (defaults to src/)
 //   ds-lint.mjs --added-markers <git-range>  audit @approved markers added in a range
 //   ds-lint.mjs --registry [root]            inventory for the report's registry section
+//   ds-lint.mjs --approve <file...>          add the @approved marker (a human's act — see SKILL.md)
+//   ds-lint.mjs --unapprove <file...>        remove it
+//   ds-lint.mjs --serve [--port N]           local API for the /components page's approve/revoke buttons
+//   ds-lint.mjs --scan [root]                every component as JSON: status, usage, props, variants
 //
 // Exit 1 when any hit is found, 0 when clean. --registry always exits 0 (inventory,
 // not a finding). --added-markers exits 1 when markers were added.
@@ -14,33 +18,47 @@
 // delimiter colliding with data containing "|", a path prefix leaking into a
 // pattern match, and grep's -i flag applying in one branch but not the other.
 
-import { readFileSync, readdirSync, statSync } from 'node:fs';
-import { join, basename } from 'node:path';
+import { readFileSync, readdirSync, statSync, writeFileSync, realpathSync } from 'node:fs';
+import { join, basename, resolve, sep } from 'node:path';
 import { execFileSync } from 'node:child_process';
+import { createServer } from 'node:http';
+import { randomBytes, timingSafeEqual } from 'node:crypto';
+import {
+  MARKER_WINDOW,
+  MARKER_RE,
+  LINT_EXTS,
+  COMPONENT_EXTS,
+  esc,
+  norm,
+  tailOf,
+  componentKey,
+  importMatchers,
+  isMarkedText,
+  scanProject,
+} from './scan-core.mjs';
 
-// A component is approved when @approved appears in a comment within the first
-// MARKER_WINDOW lines of its own file. The window is deliberate: the marker has to
-// be where a human opening the file sees it, not buried at the bottom.
-const MARKER_WINDOW = 5;
-const MARKER_RE = /(^|[\s/*#{])@approved(\s|$)/;
 
 const SKIP_DIRS = new Set(['node_modules', '.git', 'dist', 'build', '.next', 'coverage']);
-const LINT_EXTS = ['.tsx', '.jsx'];
-const COMPONENT_EXTS = ['.tsx', '.jsx', '.ts'];
 
-const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-const norm = (p) => p.replace(/^\.\//, '').replace(/\/+$/, '');
 
-// ---- config from context/STACK.md ----
+// ---- config ----
+// Keys are read from `design-guard.config` in the project root, falling back to
+// `context/STACK.md` (the Found framework's location). Format: one `key: value`
+// per line; anything else in the file is ignored, so STACK.md works unchanged.
+
+const CONFIG_FILES = ['design-guard.config', 'context/STACK.md'];
 
 function stackKey(name) {
-  try {
-    const text = readFileSync('context/STACK.md', 'utf8');
-    const m = text.match(new RegExp(`^${name}:[ \\t]*(.*)$`, 'm'));
-    return m ? m[1].trim() : '';
-  } catch {
-    return '';
+  for (const file of CONFIG_FILES) {
+    try {
+      const text = readFileSync(file, 'utf8');
+      const m = text.match(new RegExp(`^${name}:[ \\t]*(.*)$`, 'm'));
+      if (m) return m[1].replace(/\s+#.*$/, '').trim();
+    } catch {
+      // file absent — try the next
+    }
   }
+  return '';
 }
 
 function dirList(raw, fallback = '') {
@@ -58,13 +76,7 @@ const TYPOGRAPHY_BASE_RAW = stackKey('typography-base');
 const TYPOGRAPHY_BASE = /^true$/i.test(TYPOGRAPHY_BASE_RAW);
 const TYPOGRAPHY_BASE_DECLARED = /^(true|false)$/i.test(TYPOGRAPHY_BASE_RAW);
 
-// Import specifiers use whatever alias the project prefers (@/, ~/, ../), so match
-// each directory's path tail rather than assuming one.
-const tailOf = (d) => norm(d).replace(/^src\//, '');
-const TAILS = COMPONENT_DIRS.map(tailOf);
-const TAIL_ALT = TAILS.map(esc).join('|');
-const IMPORT_RE = TAIL_ALT ? new RegExp(`from\\s+["'][^"']*(?:${TAIL_ALT})/[A-Za-z0-9_-]+["']`) : null;
-const KEY_RE = TAIL_ALT ? new RegExp(`(?:${TAIL_ALT})/[A-Za-z0-9_-]+`) : null;
+const { IMPORT_RE, KEY_RE } = importMatchers(COMPONENT_DIRS);
 
 // ---- filesystem ----
 
@@ -122,11 +134,7 @@ const readLines = (f) => {
 const inComponentDir = (file) =>
   COMPONENT_DIRS.some((d) => norm(file) === d || norm(file).startsWith(d + '/'));
 
-function isMarked(file) {
-  return readLines(file).slice(0, MARKER_WINDOW).some((l) => MARKER_RE.test(l));
-}
-
-const componentKey = (dir, file) => `${tailOf(dir)}/${basename(file).replace(/\.[^.]+$/, '')}`;
+const isMarked = (file) => isMarkedText(readLines(file).join('\n'));
 
 // The imported component key, taken from the LINE CONTENT only. A component's own
 // path contains the same directory tail, so matching against the path would return
@@ -183,39 +191,43 @@ function addedMarkers(range) {
   return 0;
 }
 
+// ---- component scan ----
+// One pass over the project that everything else reads from: --registry, --scan,
+// and (later) the components page and the local UI. Each component gets a status,
+// its importers, and best-effort props/variants pulled from its source.
+//
+//   approved          carries @approved, and something imports it
+//   approved-unused   carries @approved, nothing imports it (a stale entry)
+//   unmarked-in-use   no marker, imported somewhere — a decision waiting
+//   unmarked-unused   no marker, not imported — inventory
+
+function scanComponents(root = '.') {
+  const files = {};
+  for (const f of filesUnder(root, COMPONENT_EXTS)) {
+    try {
+      files[f] = readFileSync(f, 'utf8');
+    } catch {
+      files[f] = ''; // unreadable: report the component with no props rather than drop it
+    }
+  }
+  return scanProject({ files, componentDirs: COMPONENT_DIRS.filter(isDir) });
+}
+
+// ---- mode: --scan ----
+
+function scanMode(root) {
+  console.log(JSON.stringify(scanComponents(root), null, 2));
+  return 0;
+}
+
 // ---- mode: --registry ----
 
 function registry(root) {
-  // Scan the WHOLE codebase for imports, not this run's diff: in a new project the
-  // entire codebase is the backlog, and a component in use since before the framework
-  // was installed appears in no diff and would never otherwise surface.
-  const tally = new Map(); // key -> Set of importing files
-  for (const hit of importsIn(filesUnder(root, LINT_EXTS))) {
-    if (!tally.has(hit.key)) tally.set(hit.key, new Set());
-    tally.get(hit.key).add(hit.file);
-  }
-
-  const approved = [];
-  const usedUnmarked = [];
-  let unusedCount = 0;
-
-  for (const dir of COMPONENT_DIRS) {
-    if (!isDir(dir)) continue;
-    for (const f of filesUnder(dir, COMPONENT_EXTS)) {
-      const key = componentKey(dir, f);
-      if (isMarked(f)) {
-        approved.push(key);
-      } else {
-        const n = tally.get(key)?.size ?? 0;
-        if (n > 0) usedUnmarked.push({ key, n });
-        else unusedCount++;
-      }
-    }
-  }
-
-  const uniq = (a) => [...new Set(a)].sort();
-  const approvedList = uniq(approved);
-  const usedList = uniq(usedUnmarked.map((u) => `${u.key.padEnd(44)} used in ${u.n} file(s)`));
+  const all = scanComponents(root);
+  const approvedList = all.filter((c) => c.approved).map((c) => c.key);
+  const used = all.filter((c) => c.status === 'unmarked-in-use');
+  const unusedCount = all.filter((c) => c.status === 'unmarked-unused').length;
+  const usedList = used.map((u) => `${u.key.padEnd(44)} used in ${u.usageCount} file(s)`);
 
   console.log('== component registry');
   console.log('');
@@ -237,6 +249,233 @@ function registry(root) {
   return 0;
 }
 
+// ---- marker edit ----
+// The only code in this file that writes to a project file, so it is deliberately
+// narrow: it touches nothing but a configured component file, inserts or removes
+// nothing but the marker, and verifies the result before writing.
+
+const MARKER_LINE = '// @approved';
+
+// A line that is nothing but a comment carrying the marker (and maybe a note after
+// it, like "— unstyled by design"): `// @approved`, `/* @approved */`,
+// `{/* @approved */}`, ` * @approved`, `# @approved`.
+const MARKER_ONLY_LINE_RE = /^\s*(?:\{\s*)?(?:\/\/+|\/\*+|\*+|#+)?\s*@approved(?:\s.*?)?(?:\*\/)?\s*\}?\s*$/;
+
+class MarkerError extends Error {}
+
+// Resolve `file` and make sure it is a real file inside a configured component
+// directory. Anything else is refused: the tool must not be a way to write markers
+// (or anything) into arbitrary paths.
+function resolveComponentFile(file, root = process.cwd()) {
+  let real;
+  try {
+    real = realpathSync(resolve(root, file));
+  } catch {
+    throw new MarkerError(`no such file: ${file}`);
+  }
+  if (!statSync(real).isFile()) throw new MarkerError(`not a file: ${file}`);
+  if (!COMPONENT_EXTS.some((x) => real.endsWith(x))) {
+    throw new MarkerError(`not a component file (${COMPONENT_EXTS.join(', ')}): ${file}`);
+  }
+  const rootReal = realpathSync(root);
+  const inside = COMPONENT_DIRS.some((d) => {
+    try {
+      const dirReal = realpathSync(resolve(rootReal, d));
+      return real === dirReal || real.startsWith(dirReal + sep);
+    } catch {
+      return false;
+    }
+  });
+  if (!inside) {
+    throw new MarkerError(`${file} is not inside a configured components directory (${COMPONENT_DIRS.join(', ') || 'none'})`);
+  }
+  return real;
+}
+
+const hasMarker = (lines) => lines.slice(0, MARKER_WINDOW).some((l) => MARKER_RE.test(l));
+
+// Pure: text in, text out. Keeps the file's own line endings and BOM, and slots in
+// after a shebang. Returns the same text when the marker is already in the window.
+function withMarker(text) {
+  const bom = text.startsWith('﻿') ? '﻿' : '';
+  const body = bom ? text.slice(1) : text;
+  const eol = body.includes('\r\n') ? '\r\n' : '\n';
+  const lines = body.split(eol);
+  if (hasMarker(lines)) return text;
+  const at = lines[0].startsWith('#!') ? 1 : 0;
+  lines.splice(at, 0, MARKER_LINE);
+  return bom + lines.join(eol);
+}
+
+// Pure: removes every marker inside the window. A comment-only line is dropped whole;
+// a marker sharing a line with anything else is cut out and the rest left alone.
+function withoutMarker(text) {
+  const bom = text.startsWith('﻿') ? '﻿' : '';
+  const body = bom ? text.slice(1) : text;
+  const eol = body.includes('\r\n') ? '\r\n' : '\n';
+  const lines = body.split(eol);
+  const out = [];
+  lines.forEach((line, i) => {
+    if (i >= MARKER_WINDOW || !MARKER_RE.test(line)) return out.push(line);
+    if (MARKER_ONLY_LINE_RE.test(line)) return; // drop the line
+    out.push(line.replace(/@approved/, '').replace(/[ \t]{2,}/g, ' ').replace(/[ \t]+$/, ''));
+  });
+  return bom + out.join(eol);
+}
+
+// Returns { changed, message, usedBy } or throws MarkerError. Verifies the outcome
+// from the new text before writing, so a bad edit is refused rather than saved.
+function setApproval(file, approved, root = process.cwd()) {
+  const real = resolveComponentFile(file, root);
+  const before = readFileSync(real, 'utf8');
+  const wasMarked = hasMarker(before.replace(/^﻿/, '').split(/\r?\n/));
+  if (wasMarked === approved) {
+    return { changed: false, message: `${file} is already ${approved ? 'approved' : 'unapproved'}` };
+  }
+  const after = approved ? withMarker(before) : withoutMarker(before);
+  const nowMarked = hasMarker(after.replace(/^﻿/, '').split(/\r?\n/));
+  if (nowMarked !== approved) throw new MarkerError(`could not ${approved ? 'add' : 'remove'} the marker in ${file}; file left untouched`);
+  writeFileSync(real, after);
+  return { changed: true, message: `${file} is now ${approved ? 'approved' : 'unapproved'}` };
+}
+
+// ---- mode: --approve / --unapprove ----
+// Human-run. The framework's rule is that an agent adds a marker only when asked
+// to in that moment; this is the same act, one command long.
+
+function approveMode(approved, files) {
+  if (!files.length) {
+    console.error(`ds-lint: ${approved ? '--approve' : '--unapprove'} needs a component file`);
+    return 2;
+  }
+  let code = 0;
+  for (const file of files) {
+    try {
+      let note = '';
+      if (!approved) {
+        const key = scanComponents('.').find((c) => resolve(c.file) === resolve(file));
+        if (key?.usageCount) note = ` — ${key.usageCount} file(s) import it and will now be flagged`;
+      }
+      const r = setApproval(file, approved);
+      console.log(r.message + (r.changed ? note : ''));
+    } catch (e) {
+      if (!(e instanceof MarkerError)) throw e;
+      console.error(`ds-lint: ${e.message}`);
+      code = 2;
+    }
+  }
+  return code;
+}
+
+// ---- mode: --serve ----
+// A tiny local API so the /components page can approve and revoke with one click.
+// The page is a browser page and cannot write files; this is the process with file
+// access behind it. It only ever calls setApproval(), so everything that function
+// refuses (paths outside the component dirs, symlinks, non-component files) is refused
+// here too.
+//
+// Threat model, stated plainly: it listens on 127.0.0.1 only, checks Host and Origin
+// (so a web page on another site cannot reach it, including by DNS rebinding), and
+// needs a random token for every write. Anything running as you on this machine —
+// including an AI agent with shell access — can read the token from this terminal, so
+// this stops other websites and stray requests, not a determined local process.
+// --added-markers is the backstop for that.
+
+const LOCAL_ORIGIN_RE = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
+const MAX_BODY = 16 * 1024;
+
+function serveMode(args) {
+  const pi = args.indexOf('--port');
+  const port = pi >= 0 ? Number(args[pi + 1]) : 4177;
+  if (!Number.isInteger(port) || port < 0 || port > 65535) {
+    console.error('ds-lint: --port needs a number between 0 and 65535');
+    return 2;
+  }
+  const token = randomBytes(24).toString('hex');
+  const tokenBuf = Buffer.from(token);
+  const root = process.cwd();
+
+  const server = createServer((req, res) => {
+    const send = (status, body, extra = {}) => {
+      res.writeHead(status, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', ...extra });
+      res.end(JSON.stringify(body));
+    };
+
+    const { port: bound } = server.address();
+    const host = req.headers.host || '';
+    if (host !== `127.0.0.1:${bound}` && host !== `localhost:${bound}`) return send(403, { error: 'bad host' });
+
+    const origin = req.headers.origin;
+    if (origin !== undefined && !LOCAL_ORIGIN_RE.test(origin)) return send(403, { error: 'origin not allowed' });
+    const cors = origin
+      ? {
+          'Access-Control-Allow-Origin': origin,
+          Vary: 'Origin',
+          'Access-Control-Allow-Headers': 'Content-Type, X-Guard-Token',
+          'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+          'Access-Control-Allow-Private-Network': 'true',
+        }
+      : {};
+
+    if (req.method === 'OPTIONS') {
+      res.writeHead(204, cors);
+      return res.end();
+    }
+    if (req.method === 'GET' && req.url === '/ping') return send(200, { ok: true, tool: 'design-guard' }, cors);
+
+    if (req.method === 'POST' && (req.url === '/approve' || req.url === '/unapprove')) {
+      const given = Buffer.from(String(req.headers['x-guard-token'] || ''));
+      if (given.length !== tokenBuf.length || !timingSafeEqual(given, tokenBuf)) {
+        return send(401, { error: 'missing or wrong token' }, cors);
+      }
+      if (!String(req.headers['content-type'] || '').startsWith('application/json')) {
+        return send(415, { error: 'send application/json' }, cors);
+      }
+      let body = '';
+      let tooBig = false;
+      req.on('data', (chunk) => {
+        body += chunk;
+        if (body.length > MAX_BODY) {
+          tooBig = true;
+          req.destroy();
+        }
+      });
+      req.on('end', () => {
+        if (tooBig) return;
+        let file;
+        try {
+          file = JSON.parse(body).file;
+        } catch {
+          return send(400, { error: 'invalid JSON' }, cors);
+        }
+        if (typeof file !== 'string' || !file) return send(400, { error: 'file is required' }, cors);
+        try {
+          const r = setApproval(file, req.url === '/approve', root);
+          console.log(`${new Date().toLocaleTimeString()}  ${r.message}`);
+          return send(200, r, cors);
+        } catch (e) {
+          if (!(e instanceof MarkerError)) throw e;
+          return send(400, { error: e.message }, cors);
+        }
+      });
+      return;
+    }
+    return send(404, { error: 'not found' }, cors);
+  });
+
+  server.listen(port, '127.0.0.1', () => {
+    const { port: bound } = server.address();
+    console.log(`design-guard listening on http://127.0.0.1:${bound}  (this machine only)`);
+    console.log('');
+    console.log(`Token: ${token}`);
+    console.log('');
+    console.log('Paste the token into the /components page to enable one-click approve and revoke.');
+    console.log('Only a human should do that. Ctrl+C stops it.');
+  });
+  process.on('SIGINT', () => process.exit(0));
+  return null; // keep running
+}
+
 // ---- mode: lint ----
 
 const PATTERNS = [
@@ -255,7 +494,7 @@ const PATTERNS = [
 // Semantic elements the CSS base layer already styles. Typography utilities on
 // these silently defeat the type scale — the most common drift in a Tailwind
 // codebase, and one of the few design mistakes a machine can actually see.
-// Gated on `typography-base:` in STACK.md: on a project whose base layer styles
+// Gated on `typography-base:` in design-guard.config (or context/STACK.md): on a project whose base layer styles
 // nothing, the utilities ARE the styling and this would fire on every heading.
 const TYPOGRAPHIC_ELEMENTS = 'h1|h2|h3|h4|h5|h6|p|a|strong|blockquote|li|label|legend';
 const SEMANTIC_TAG_RE = new RegExp(`<(${TYPOGRAPHIC_ELEMENTS})\\s[^>]*className="([^"]*)"`, 'g');
@@ -498,12 +737,12 @@ function lint(targets) {
       console.log('');
       console.log('   Typography utilities on headings, paragraphs and links are going');
       console.log('   unchecked against a base layer that already sets them. Set');
-      console.log('   `typography-base: true` in context/STACK.md to check them.');
+      console.log('   `typography-base: true` in design-guard.config (or context/STACK.md) to check them.');
       console.log('');
       hits = 1;
     } else {
       console.log('== typography check off — no base layer found styling semantic elements');
-      console.log('   Record it: `typography-base: false` in context/STACK.md. This line');
+      console.log('   Record it: `typography-base: false` in design-guard.config (or context/STACK.md). This line');
       console.log('   stops once the decision is written down.');
       console.log('');
     }
@@ -527,7 +766,7 @@ function lint(targets) {
     unlisted.forEach((d) => console.log(`  ${d}`));
     console.log('');
     console.log('   These are never examined, so their components are neither approved nor');
-    console.log('   flagged. Add each to components: in context/STACK.md, or record it under');
+    console.log('   flagged. Add each to components: in design-guard.config (or context/STACK.md), or record it under');
     console.log('   components-ignore: to say the exclusion is deliberate.');
     console.log('');
     hits = 1;
@@ -536,7 +775,7 @@ function lint(targets) {
   const existing = COMPONENT_DIRS.filter(isDir);
   if (existing.length === 0) {
     console.log(
-      '== component directory not found (set components: in context/STACK.md) — approval cannot be verified'
+      '== component directory not found (set components: in design-guard.config (or context/STACK.md)) — approval cannot be verified'
     );
     console.log(`   looked for: ${COMPONENT_DIRS.join(' ')}`);
     console.log('');
@@ -580,6 +819,13 @@ const argv = process.argv.slice(2);
 
 if (argv[0] === '--added-markers') {
   process.exit(addedMarkers(argv[1] || 'main...HEAD'));
+} else if (argv[0] === '--approve' || argv[0] === '--unapprove') {
+  process.exit(approveMode(argv[0] === '--approve', argv.slice(1)));
+} else if (argv[0] === '--serve') {
+  const code = serveMode(argv.slice(1));
+  if (code !== null) process.exit(code);
+} else if (argv[0] === '--scan') {
+  process.exit(scanMode(argv[1] || '.'));
 } else if (argv[0] === '--registry') {
   process.exit(registry(argv[1] || '.'));
 } else {
