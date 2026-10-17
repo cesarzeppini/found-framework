@@ -1,9 +1,15 @@
 # Step 4 — Check, state, present
 
 1. Run `scripts/spec-no-code.mjs` and clear any hits.
-2. **State what you detected, in one line**, before the draft: stack, what already exists, what's missing. "Detected: Next app router + Supabase Auth, invites table absent, no existing empty-state pattern on this route — drafting against `/projects` conventions." A wrong assumption caught here costs a sentence; caught at review it has propagated through every slice.
-3. Present the draft with the question round — the "actually ask" bucket only, formatted per below.
-4. Revise against the answers.
+2. **Test the draft's requirements.** Re-read the draft as a reviewer would and fix what fails, in the draft, before presenting:
+   - every acceptance criterion is measurable by someone who didn't write it ("loads quickly" becomes a stated bar, or moves to Assumptions)
+   - no two criteria, constraints or overrides conflict
+   - every state a criterion implies appears in States and edge cases
+   - every term is used one way throughout, matching GLOSSARY.md
+   Report one line with the draft: `requirements: clean`, or what was tightened.
+3. **State what you detected, in one line**, before the draft: stack, what already exists, what's missing. "Detected: Next app router + Supabase Auth, invites table absent, no existing empty-state pattern on this route — drafting against `/projects` conventions." A wrong assumption caught here costs a sentence; caught at review it has propagated through every slice.
+4. Present the draft with the question round — the "actually ask" bucket only, formatted per below.
+5. Revise against the answers.
 
 **One round of questions, not twenty.** Unlike an open-ended interview, this round doesn't reopen once answered — if a second round feels necessary, the missing thing almost always belonged in assumptions instead of a question. Get the one round right rather than planning to iterate it.
 

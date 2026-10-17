@@ -624,7 +624,7 @@ Deliberately not taking: the issue-tracker/triage/wayfinder machinery (tasks.md 
 
 ## Worth taking from GitHub's Spec Kit
 
-A spec, plan, tasks, implement toolkit with a constitution file, built for human-driven use across many agents. Found already covers its stages and goes further (review, ship, checks, unattended runs). One piece taken: `analyze`'s read-only cross-artifact consistency pass, as the closing check inside Plan. Not taking: its extension, preset and catalog machinery, which solve a many-teams distribution problem this repo doesn't have, and its separate `clarify` step, which spec's single question round already covers.
+A spec, plan, tasks, implement toolkit with a constitution file, built for human-driven use across many agents. Found already covers its stages and goes further (review, ship, checks, unattended runs). Two pieces taken: `analyze`'s read-only cross-artifact consistency pass, as the closing check inside Plan, and `checklist`'s "unit tests for requirements" idea, as a requirements test in spec's step 4 (measurable criteria, no conflicts, states covered, one term per concept) run before the draft is presented. Not taking: its extension, preset and catalog machinery, which solve a many-teams distribution problem this repo doesn't have, and its separate `clarify` step, which spec's single question round already covers.
 
 ---
 
