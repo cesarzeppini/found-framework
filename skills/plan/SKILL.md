@@ -75,6 +75,20 @@ Estimate the slice count and write it into the spec's effort ceiling constraint.
 
 Set it with a little headroom — a ceiling that trips on the first surprise halts good runs, and one set at double the estimate never trips at all. State the estimate and the ceiling separately so the gap is visible.
 
+## Consistency check before handing back
+
+Once tasks.md is written, read SPEC.md and tasks.md side by side. Read-only on the spec; fix tasks.md in place.
+
+Completion criteria, each checkable:
+
+- **Coverage.** Every acceptance criterion maps to at least one slice, and every slice maps to at least one criterion. A gap either way is fixed by recutting, or named in the report if the fix is the spec's.
+- **Constraints.** Every constraint and override in SPEC.md is honoured by the slices touching it, and no slice contradicts one.
+- **Vocabulary.** Slice names and expectations use GLOSSARY.md's terms, one term per concept.
+- **Ordering.** No slice waits on something a later slice produces, and every slice marked parallel touches a surface disjoint from its siblings'.
+- **Testability.** Every slice names a seam and an observable expectation, or carries an explicit test-exempt.
+
+A blocking mismatch (a criterion no slice covers, a slice breaking a constraint) gets fixed in tasks.md, up to the retry limit in RULES.md. Moderate and minor mismatches park to the report. Report as one line: `consistency: clean (N criteria, M slices)`, or the mismatches found and how each resolved.
+
 ## Output
 
 Write `work/<feature>/tasks.md` with the prep block, the slices, the feature tier and the effort ceiling. Then hand back to the run skill — Plan does not start building.

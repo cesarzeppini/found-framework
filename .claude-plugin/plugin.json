@@ -1,7 +1,7 @@
 {
   "name": "found",
   "description": "Spec → plan → build → review → ship pipeline with a human gate at each end. Explicit-only: never triggers automatically, regardless of feature size.",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "author": {
     "name": "cesarzeppini",
     "email": "cesarzeppini@gmail.com"

@@ -271,6 +271,8 @@ SPEC.md → `tasks.md`.
 
 A slice is only valid if Plan can name the seam it would be tested through and state how it would be tested against that seam. If it can't, the slice is cut wrong.
 
+**Consistency check closes Plan.** Before handing back, Plan reads SPEC.md and tasks.md side by side for coverage (criterion ↔ slice, both directions), constraint conflicts, vocabulary drift against GLOSSARY.md, ordering and parallel-disjointness, and testability. Blocking mismatches are fixed in tasks.md within the standing retry limit; the rest park to the report, which carries one `consistency:` line even when clean. It is a pass inside Plan, not a new stage, so the pipeline's shape and the two human stops are unchanged. Taken from GitHub's Spec Kit `analyze` step.
+
 #### tasks.md structure
 
 **Prep block first** — Stage 0 tasks (below). Sequential, not parallel; it moves shared ground under everyone's feet.
@@ -619,6 +621,10 @@ His repo is a toolbox of small, human-driven commands rather than a pipeline, so
 - `wizard`'s generated-script pattern for a step only a human can take, reframed from a chat aside into the unmet-assumption exit RULES.md already has — `skills/build/references/wizard.md` and `wizard-template.sh`.
 
 Deliberately not taking: the issue-tracker/triage/wayfinder machinery (tasks.md and the two-stop model already cover that ground), `ask-matt`'s router (six pipeline skills chained by `run` need no router), `handoff` and `teach` (no session-to-session handoff problem in an unattended run).
+
+## Worth taking from GitHub's Spec Kit
+
+A spec, plan, tasks, implement toolkit with a constitution file, built for human-driven use across many agents. Found already covers its stages and goes further (review, ship, checks, unattended runs). One piece taken: `analyze`'s read-only cross-artifact consistency pass, as the closing check inside Plan. Not taking: its extension, preset and catalog machinery, which solve a many-teams distribution problem this repo doesn't have, and its separate `clarify` step, which spec's single question round already covers.
 
 ---
 
