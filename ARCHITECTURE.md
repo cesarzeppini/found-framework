@@ -527,6 +527,7 @@ Denylist table — banned / why / use instead — plus `scripts/prose-lint.mjs` 
 - **Ask, never assume.** Ask before mapping, before planning, and before each phase.
 - **Phases gated by "go phase N".** Explain the phase in a few lines, build it, then give a short report of what went well and what didn't.
 - **End with a brief checklist** of what's done and what's open, in `work/readiness-<date>/report.md`, presented in chat.
+- **Features don't undo it.** security-audit checks each diff against the checklist items it touches, and only those. Review's user-story walk also checks that nothing the app shows claims something untrue (advisory).
 
 ## Proofs and finding ids
 

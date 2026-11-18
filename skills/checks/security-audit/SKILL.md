@@ -49,6 +49,8 @@ The surface is a starting point, not a boundary. A diff that touches something t
 
 **Dependencies** the diff introduces: currently maintained, no known critical advisories.
 
+**The readiness checklist.** Check the diff against the items in `skills/readiness-audit/references/checklist.md` that it touches. A new endpoint touches rate limiting and trusting the client; a new upload touches file storage. Skip the items it doesn't touch. This keeps a feature from undoing what a readiness audit fixed.
+
 ## Proofs
 
 Every `high` finding gets a proof: a test that performs the attack and expects it refused, failing while the hole is open. Write the finding so a proof can be built from it alone: **who acts**, **what they send**, **what happens now**, **what should happen**. Whoever fixes it starts with the proof. `references/proofs.md` has the shape and the local-only rule.
