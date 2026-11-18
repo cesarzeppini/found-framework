@@ -34,15 +34,10 @@ found/
                           file in this repo — the two loads, progressive
                           disclosure, leading words, no-op pruning. Consulted
                           whenever a skill is hand-edited or regenerated.
-    finding-ids.md        area prefixes and rules for finding ids, shared by
-                          security-audit and readiness
-    stacks/               one profile per platform — what it leaves open by
-                          default and how to close it. Chosen by STACK.md's
-                          stack-profile key.
-      supabase.md
+    finding-ids.md        how security findings are named and closed
   skills/                canonical, harness-neutral
     run/                 orchestrator: chains plan → build → review → ship after spec approval
-    readiness/           project-level audits outside the pipeline — baseline mode first
+    readiness-audit/     production readiness, outside the pipeline
     visualize/           vendored from display-dev/visualize — branded HTML artifacts
     spec/
     plan/
@@ -99,8 +94,6 @@ And per project repo:
       tasks.md
       wizard-<slug>.sh   only when a Stage 0 task is human-required; disposable
       out/
-    baseline-<date>/     readiness baseline: 00-map.md, one doc per area group,
-                         report.md with the fix order. Kept — it's the record.
   found/                 submodule or copy of the framework repo
   .claude/
     skills -> ../found/skills   symlink
@@ -256,8 +249,6 @@ What keeps the list short is the assumptions section. Anything derived but uncer
 - *Out of scope* — explicit non-goals. The most valuable line in the file. Without it the agent helpfully builds three adjacent things nobody asked for. *Drafted.*
 - *Overrides* — where minimum-viable is dangerous. Written as **bars, not solutions**. Not "use Supabase Auth" — that's implementation. Instead: "session handling must be production-grade, not hand-rolled." The spec sets the bar; the builder picks what clears it. Drafted by the skill itself against COMPANY.md and PRODUCT.md, sanity-checked by a reasoning-tier pass, approved as part of spec review — never a separate interruption. *Drafted.*
 - *Security surface* — what this feature touches: new tables, new endpoints, auth changes, user input, file uploads, third-party keys. Not checks, just surface. *Derived.*
-- *Money and state* — each state a record moves through, who or what moves it (person, outside event, job), what a late or repeated move does, states where a person must act and who gets told; where money moves, who decides the amount and which records outlive deletes. `none` when nothing moves. Added after the Kancha audit, where most critical findings were state and money holes that no access rule covers: a buyer choosing the amount charged, a late payment event cancelling a paid deal, a delete erasing a paid record. Build applies `skills/build/references/money-and-state.md` to it; security-audit walks it transition by transition. *Derived, drafted where new.*
-- *Cost and abuse surface* — actions a stranger could repeat to run up a bill or flood someone, each with a limit as a bar. `none` when there are none. *Drafted.*
 - *Compliance surface* — the same facts read for a different consequence: new personal data collected, new third-party processors, new cookies or trackers, changed retention, changed data location, anything touching minors or payments. Empty for most features, and an empty field is a checked box, not a skipped one. *Derived.*
 - *Data rules* — what must not be lost, whether migrations must be reversible. *Drafted.*
 - *Effort ceiling* — the only legitimate mid-run halt. If slice count blows past the plan's estimate, the spec was wrong, and continuing burns effort on a bad foundation. Stop, report, wait. *Drafted from the plan's estimate.*
@@ -347,18 +338,6 @@ Exceptions are the overrides listed in SPEC.md. Anything not listed there is min
 #### Security applied inline
 
 Not everything waits for the audit. RLS on a new table is cheap during the slice that creates it and expensive to retrofit once data and code depend on it. The builder applies the obvious ones as it goes — RLS on tables it creates, parameterised queries, auth on new routes — using the baseline rules in STACK.md. The end-of-feature audit is the net, not the only line.
-
-**Stack profiles.** "RLS on" turned out not to be enough. The Kancha audit (November 2026, a Supabase marketplace) found 7 critical holes on a project with RLS on 14 of 15 tables: Supabase's default grants opened every new function to anonymous visitors, owner-rights functions took a user id as a parameter, and update policies covered every column. None of that is visible from the general rule; all of it is specific to the platform. So platform rules live in `references/stacks/<name>.md`, one per platform, selected by `stack-profile:` in STACK.md. The general rules in STACK.md say *what* must be true; the profile says how that goes wrong on this platform.
-
-Conventions the readers depend on:
-
-- **Five fixed sections** — Build rules, Audit checks, Linter, Proofs on this stack, Settings outside the repository — under exactly those headings, so build, security-audit, proofs and readiness each read only their part.
-- **Every rule traces to a real finding**, named beside it. A rule nobody can trace gets cut at the next edit; a profile is evidence, not a wishlist.
-- **`stack-profile: none` is a recorded decision.** An absent key is an unmet assumption and stops security-audit.
-- **Project-wide rules go to Stage 0.** A profile rule that applies once per project (closing Supabase's default privileges) is done in Stage 0 of the first feature that touches that layer.
-- **The project's own baseline wins** where it and the profile disagree, and the disagreement is reported.
-
-**Money and state rules are stack-neutral** and live in `skills/build/references/money-and-state.md`, applied by any slice touching the spec's Money and state constraint: the server decides amounts and states, every transition checks its starting state, late and repeated events do nothing, records that matter outlive deletes, every state needing a person tells someone. Each rule names the Kancha finding it prevents. A slice on the Cost and abuse surface gets its limit in the same slice.
 
 ---
 
@@ -496,7 +475,7 @@ Each check follows the same shape: a deterministic script for what machines catc
 
 A detector with non-trivial logic keeps tests beside it (`<name>.test.mjs`, run with `node --test`), and every test corresponds to a bug that check actually shipped or a rule it depends on.
 
-Exceptions, deliberate: `security-audit`, `compliance`, `code-quality` and `design-quality` are judgment-only, with no script. (security-audit does leave tests behind — proofs, below — but each one tests a single named hole after judgment found it. That's the opposite of a detector. It also runs the platform's own security linter when the stack profile names one: an ecosystem tool, like the dependency audit, not a framework script. Warnings on what the diff created are the feature's; ones already there are counted and pointed at the baseline.) A detector for these would produce confident false negatives on exactly the cases they exist to catch — the free-text field that collects personal data without being named for it, the duplicated logic shape a line-based scanner can't recognise as duplicated. The one narrow exception is compliance's dependency signal: new packages and new third-party network calls are reliably detectable and map straight to "new processor" and "new tracker," so a script flags those and feeds the judgment layer. It never decides.
+Exceptions, deliberate: `security-audit`, `compliance`, `code-quality` and `design-quality` are judgment-only, with no script. A detector for these would produce confident false negatives on exactly the cases they exist to catch — the free-text field that collects personal data without being named for it, the duplicated logic shape a line-based scanner can't recognise as duplicated. The one narrow exception is compliance's dependency signal: new packages and new third-party network calls are reliably detectable and map straight to "new processor" and "new tracker," so a script flags those and feeds the judgment layer. It never decides.
 
 ### Severity and retry thresholds
 
@@ -506,16 +485,6 @@ Standing defaults, so they don't get reinvented per skill:
 - **Severity is rated against COMPANY.md**, not in the abstract. What's critical for a product with payments and 40,000 users isn't critical for an internal tool with four.
 - **Bounded retries:** three fix attempts on a blocking finding. After that the run ends into the report with the finding named — it never loops and never waits.
 - **Exit codes:** scripts exit 1 for real findings and 2 for a missing harness (which is a Stage 0 job, not a failure of the work). A run must be able to tell setup failure from a genuine hit.
-
-### security-audit: proofs and finding ids
-
-A judgment-only audit leaves nothing behind: once a hole is fixed, nothing stops it coming back. The Kancha audit showed the alternative. Every finding had a script that performed the attack, the scripts went into CI, and a finding was closed when its script stopped succeeding. That is now how Found closes serious security findings.
-
-- **Every `high` finding gets a proof.** A `medium` gets one when a single request can show it. A proof is an ordinary test in the project's suite, under `security/<scope>/<id>-<slug>`. It acts through the boundary an attacker uses, asserts the refusal, then reads the state back.
-- **The audit finds; the fix writes the proof.** The finding is written precisely enough to build the proof from it alone: who acts, what they send, what happens now, what should happen. The fix starts by watching the proof fail. A proof that passes before any fix withdraws the finding.
-- **Findings say `proven` or `read`,** so a reader knows which ones were actually run.
-- **Proofs run against the local stack only.** Each checks its targets (local hosts, test-mode keys) and exits 2 on anything else. That way a misconfiguration looks like a setup failure, not a result. A third-party sandbox whose webhooks reach deployed environments counts as "anything else". At Kancha, one test payment reached both staging and production that way.
-- **Finding ids**: an area prefix plus a number (`references/finding-ids.md`), unique within one report, written with their scope outside it (`invites/A2`). Never reused, never renumbered. Closed by adding a status line (`closed`, `accepted` with reason and date, `withdrawn`) rather than editing the finding. The prefixes are shared with `readiness`, so a baseline audit and a feature review use the same vocabulary.
 
 ### design-system-guard
 
@@ -549,29 +518,21 @@ Denylist table — banned / why / use instead — plus `scripts/prose-lint.mjs` 
 
 ---
 
-## Readiness — project-level audits
+## Readiness audit
 
-The checks read one feature's diff. Some of what makes a project unsafe is in no diff: platform defaults left open before Found arrived, keys unrotated since the first build, backups never restored. `skills/readiness` looks at the whole project. It sits outside the pipeline, because it isn't a feature, and it only runs when asked.
+`skills/readiness-audit` checks whether a project is ready for production, outside the pipeline. It's run when asked, and offered once when there are signs of production. **It holds a process, not a rulebook.** A first draft encoded what one audit (Kancha) had found, as stack- and domain-specific rules. That was the wrong layer: those rules fit one project and go stale on the rest. What made that audit work was the method, so the method is what's kept.
 
-**Baseline mode** is the first mode. It's a one-off full audit for a project coming into Found: inherited, or built in Lovable, Bolt or similar. Its shape is taken from the Kancha audit (November 2026: 13 areas, 90 findings, 61 checks run, every fix stage later built and proven closed), because that audit's output turned straight into a working fix sequence.
+- **A fixed starting checklist** (`references/checklist.md`): 15 common items plus 11 from OWASP Top 10:2025 and current launch checklists. Two of them apply only when present (file storage, personal data).
+- **Research and mapping decide the rest.** A best-practices search for this stack, and a map of the codebase, add whatever this project needs. Nothing project-specific is written into the framework.
+- **Ask, never assume.** Ask before mapping, before planning, and before each phase.
+- **Phases gated by "go phase N".** Explain the phase in a few lines, build it, then give a short report of what went well and what didn't.
+- **End with a brief checklist** of what's done and what's open, in `work/readiness-<date>/report.md`, presented in chat.
 
-1. **Map:** an inventory before any verdict, ending with *To check, by area* and *Not visible from the repository*.
-2. **One scope stop:** intended product rules, known unfinished work, out of scope, areas that don't apply, whether proofs can run. Answers are recorded as dated decisions. This stop is the baseline's own. The pipeline's two-stop rule governs feature runs, and this isn't one. Anything raised later is parked as `pending decision`.
-3. **Fourteen areas,** each with an id prefix (`references/finding-ids.md`) and a checklist built from real findings (`skills/readiness/references/areas.md`). They're independent once the map exists, so they can run in parallel.
-4. **Fix order:** stage 0 holds human-required steps, then root causes before symptoms, then by what each hole lets someone do, then known unfinished work, then platform settings. Each stage is sized for one pipeline run (`spec this: baseline stage 3`). Its "what changes" lines become the spec's behaviour and its proofs become the acceptance criteria. Stages that are only safe together say so on both sides.
-5. **Report:** bottom line in plain sentences, numbers, decisions, critical and high findings, fix order, what holds, not covered, how the audit ran.
+## Proofs and finding ids
 
-Conventions it depends on:
+Judgment-only security review leaves nothing behind once a hole is fixed. So every `high` finding gets a **proof**: a test that performs the attack, expects it refused, and stays in the suite (`skills/checks/security-audit/references/proofs.md`). The fix starts by watching it fail. Proofs run against the local stack only and exit 2 on anything else, so a misconfiguration can't look like a result. A third-party sandbox whose webhooks reach deployed environments counts as "anything else". The readiness audit writes its proofs expected-to-fail, so the suite stays green until the fixing phase removes the marker.
 
-- **Read-only on hosted services.** Platform CLIs may read settings. Nothing is changed, deployed or written outside the local stack and `work/`.
-- **The audit fixes nothing.** A fix made mid-audit hides what was found and skips its own proof.
-- **Baseline proofs are written in expected-to-fail form** with the runner's own mechanism, under `security/baseline/`. That keeps the suite green while holes are open, and makes an accidental fix show up as an unexpected pass. The stage that fixes a finding starts by removing the marker. Runners with no such mechanism keep proofs in `work/baseline-<date>/proofs/` until their stage moves them in.
-- **Every document opens with how far it goes** (read, run, not seen), and every finding says `proven` or `read`.
-- **Four severities** (critical, high, medium, low), rated against COMPANY.md and the recorded decisions. `not built` marks known unfinished work, counted separately so it doesn't bury real holes.
-- **`--status` appends, never edits.** It runs every baseline proof and adds a dated status section to each document (closed, accepted with reason, open with what it's waiting on, found while fixing). A setting outside the repository stays open until a person confirms it.
-- **Output lives in `work/baseline-<date>/`** and is kept. A second baseline over one with open findings is refused in favour of `--status`.
-
-Launch, milestone and scheduled modes are planned for later. They add the project-level settings checklist (statuses: done, accepted, waiting on, needs a paid plan) and the record kept in STACK.md.
+Findings carry ids (`references/finding-ids.md`): a prefix the report defines plus a number. They're never reused, and they're closed by adding a status line rather than editing.
 
 ## Skills learn from runs — with a gate
 

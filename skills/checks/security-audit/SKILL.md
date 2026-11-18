@@ -19,21 +19,17 @@ Read the whole diff at once. That is the point of running here rather than per s
 
 ## Why there's no script
 
-**Judgment-only, deliberately.** There is no detector here, and one should not be added. What this check leaves behind instead is a **proof** per serious finding — see below. A proof isn't a detector: it tests one named hole, written after a human-grade judgment found it.
+**Judgment-only, deliberately.** There is no detector here, and one should not be added. What it leaves behind instead is a **proof** for each serious finding (see below): a test for one named hole, written after judgment found it.
 
 A scanner would catch the patterns that are already conventions — a concatenated query, a route missing its auth wrapper — and stay silent on the three things this check exists for. Reachability, a tenant filter absent from one query among twenty, a serialiser that accumulated a field over four slices: none of those is a property of a line. They're properties of how the whole diff fits together, which is why they survive per-slice review in the first place.
 
-A clean scan on those would read as clearance, and that is worse than no scan. The mechanical parts are what the ecosystem's own tools are for — known advisories on new dependencies, and the platform's own security linter (below). Neither needs a framework script.
-
-The Kancha audit is why both exist here. It found 7 critical holes in a project with row level security on almost every table, and the platform's linter had been reporting the root cause on production all along. Nobody was running it.
+A clean scan on those would read as clearance, and that is worse than no scan. The mechanical parts are what the ecosystem's own tools are for: known advisories on new dependencies, and the platform's own security checker if it has one. Run them; they need no framework script.
 
 ## Inputs
 
-Start from **SPEC.md's security surface** — new tables, new endpoints, auth changes, user input, file uploads, third-party keys. It names the surface; this check decides what that surface implies. Then its **Money and state** and **Cost and abuse** constraints: the first is walked transition by transition (below), the second checked limit by limit.
+Start from **SPEC.md's security surface** — new tables, new endpoints, auth changes, user input, file uploads, third-party keys. It names the surface; this check decides what that surface implies.
 
 Then `context/STACK.md` for the project's baseline rules — the stack's own conventions decide what "correct" looks like here, and a finding that ignores them is noise.
-
-Then the **stack profile** STACK.md names (`references/stacks/<name>.md`): its **Audit checks** section adds to the list below, and its build rules are what the builder was meant to apply — a missed one is a finding. No `stack-profile:` key is an unmet assumption: stop and ask for it to be recorded, `none` included.
 
 The surface is a starting point, not a boundary. A diff that touches something the spec didn't list is itself worth reporting: it means the spec's surface was wrong, and that's a spec-quality signal.
 
@@ -51,37 +47,13 @@ The surface is a starting point, not a boundary. A diff that touches something t
 
 **Uploads,** where the feature has them: type and size enforced server-side, stored outside the web root or behind a signed URL, filenames never trusted.
 
-**Ownership on every identifier.** Each id the client sends — in a path, a body, a function argument — has a check that the caller may act on that record. A function that takes a user id and uses it instead of the caller's is the most common way one user reads another's data.
-
-**Money and state, walked.** For each transition in the spec's Money and state constraint: who can trigger it, from which starting state, and what the code does when the move arrives from the wrong state, arrives twice, or arrives after a later one. Who decides each amount. Whether a delete anywhere can erase a record the spec says must last. Against `skills/build/references/money-and-state.md`, which is what the builder was meant to apply.
-
-**Webhooks and jobs.** Signature verified before any side effect; repeats ignored; the record's state checked; nothing reachable with only the public key.
-
-**Elevated keys.** Every use of a service, admin or secret key in the diff: what checks the caller before it, and that it never reaches client code.
-
-**Cost and abuse.** Every action on the spec's Cost and abuse surface has its limit, enforced on the server. An action a signed-out visitor can repeat without one is `high` when it costs money or reaches another person.
-
-**Live channels.** What each subscription the diff adds sends, field by field, to whom — signed-out listeners included.
-
-**CORS and headers.** Allowed origins the diff adds or widens, credentials with wildcards, removed security headers.
-
-**Account flows,** when auth is touched: whether sign-in and reset reveal which emails exist, whether reset links expire and work once, whether changing a password ends other sessions.
-
-**Logs.** Personal data, tokens or full request bodies written to logs or analytics by the diff.
-
 **Dependencies** the diff introduces: currently maintained, no known critical advisories.
-
-## Linter
-
-When the stack profile names one, run its **Linter** against the local database with the feature's migrations applied, and against the base branch for comparison. Every warning on something the diff created or changed is this feature's: fix it, or explain it in the report (a function deliberately open to signed-out visitors, say so and why). Warnings that were already there are reported as a count with a pointer to the baseline, not as this feature's findings.
-
-A linter that can't run locally is a setup failure, not a clean result — report it as such.
 
 ## Proofs
 
-Every `high` finding gets a proof: a test that performs the attack and expects it refused, failing while the hole is open. The proof is written with the fix, not by the audit, so write the finding so a proof can be built from it alone — **who acts** (signed out, stranger, other party), **what they send**, **what happens now**, **what should happen**. Whoever fixes it — build on a hand-back, or this check fixing a medium in place — starts with the proof. `references/proofs.md` has the shape and the local-only guard.
+Every `high` finding gets a proof: a test that performs the attack and expects it refused, failing while the hole is open. Write the finding so a proof can be built from it alone: **who acts**, **what they send**, **what happens now**, **what should happen**. Whoever fixes it starts with the proof. `references/proofs.md` has the shape and the local-only rule.
 
-A finding that's only been read, not run, says so: `read` or `proven` beside its severity. A proof that passes before any fix withdraws the finding.
+Each finding says `proven` or `read`, so the report is clear about which ones were actually run.
 
 ## Severity and blocking
 
@@ -93,7 +65,7 @@ Thresholds and the retry limit come from RULES.md. This check keeps security's c
 | medium | Real weakness needing a precondition | Park, per RULES.md. Fix in place if unambiguous. |
 | low | Hardening, defence in depth | Park. Never blocks. |
 
-Report findings in this vocabulary rather than translating them, so a finding stays greppable against the tools and advisories that use it.
+Give each finding an id (`references/finding-ids.md` at the repo root), which its proof and fix reuse. Report findings in this vocabulary rather than translating them, so a finding stays greppable against the tools and advisories that use it.
 
 Rate on what the finding lets someone actually do in this system — RULES.md says severity is rated against COMPANY.md, and this is where that bites hardest. A theoretical issue in an admin-only path used by two people is not high severity.
 
@@ -105,22 +77,18 @@ Rate on what the finding lets someone actually do in this system — RULES.md sa
 
 **Report decisions, not activity** (RULES.md): findings and what you changed, not the surface you walked through to get there. One result for the check, including when it's clean — on a stack where most features find nothing, a silent audit and an absent one look identical.
 
-Every finding carries an id — area prefix and number, from `references/finding-ids.md` at the repo root — unique within this feature's report. The proof, the fix commit and the closing status line all use it.
-
 ```text
 security-audit
 Blocking (1)
-  A1  high    proven  src/api/invites.ts:34  invite lookup by id has no tenant filter
-                                             who: any signed-in user · sends: another
-                                             org's invite id · now: invite returned ·
-                                             should: not found
+  high    src/api/invites.ts:34  invite lookup by id has no tenant filter;
+                                 any signed-in user can read any invite
 Fixed (2)
-  I1  medium  read    src/api/invites.ts:12  email validated at the boundary
-  A2  medium  proven  supabase/policies.sql  invites RLS policy always evaluated true,
-                                             now owner-scoped · proof: security/invites/A2
+  medium  src/api/invites.ts:12  email validated at the boundary
+  medium  supabase/policies.sql  invites RLS policy always evaluated true,
+                                 now owner-scoped
 Parked (1)
-  P1  low     read    src/lib/log.ts:8       invite payload logged in full, includes email —
-                                             propose redacting; check nothing parses the log
+  low     src/lib/log.ts:8       invite payload logged in full, includes email —
+                                 propose redacting; check nothing parses the log
 Surface drift (1)
   spec listed no file uploads; the diff adds avatar upload in slice 5
 ```

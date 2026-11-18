@@ -24,7 +24,7 @@ How authentication works, where sessions live, how authorisation is expressed. W
 
 Test runner, how the suite is invoked, where tests live, what "the full suite" means. Browser/screenshot harness, if configured.
 
-How the local stack is started for proofs (the security tests that attack it), and what resets it. Proofs run against this and nothing else — see `skills/checks/security-audit/references/proofs.md`.
+How the local stack is started and reset, for proofs (the security tests that attack it, local only — `skills/checks/security-audit/references/proofs.md`).
 
 If any of these is missing, standing it up is a Stage 0 task — the slice gates have nothing to run otherwise.
 
@@ -76,19 +76,7 @@ Which of `skills/checks/` run on this project, and any project-specific configur
 
 What "secure by default" means on this stack, concretely: RLS on every new table, parameterised queries only, auth required on new routes unless stated, validation at the boundary, secrets in the environment.
 
-The builder applies these inline as it goes. They are the floor, not overrides — they need no spec entry to justify them. Rules for money and state changes hold on every stack and live in `skills/build/references/money-and-state.md`; list here only where this project goes further.
-
-## Stack profile `[derive → confirm]`
-
-> **Read by build, `security-audit` and `readiness`.** Keep the key.
-
-```
-stack-profile: <name>[, <name>...]   e.g. supabase
-```
-
-Names the platform rules in `references/stacks/<name>.md`: what this platform leaves open by default and how to close it. Derived from the dependencies and config; confirmed because a project half-migrated off a platform still needs its rules. A platform with no profile yet is `none`, written down, so the absence is a decision rather than an oversight.
-
-The baseline rules above are this project's own; the profile is shared across every project on the platform. When they disagree, the baseline here wins and the disagreement is worth a line in the report.
+The builder applies these inline as it goes. They are the floor, not overrides — they need no spec entry to justify them.
 
 ## Legal documents `[ask]`
 
