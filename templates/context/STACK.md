@@ -76,7 +76,7 @@ Which of `skills/checks/` run on this project, and any project-specific configur
 
 What "secure by default" means on this stack, concretely: RLS on every new table, parameterised queries only, auth required on new routes unless stated, validation at the boundary, secrets in the environment.
 
-The builder applies these inline as it goes. They are the floor, not overrides — they need no spec entry to justify them.
+The builder applies these inline as it goes. They are the floor, not overrides — they need no spec entry to justify them. Rules for money and state changes hold on every stack and live in `skills/build/references/money-and-state.md`; list here only where this project goes further.
 
 ## Stack profile `[derive → confirm]`
 

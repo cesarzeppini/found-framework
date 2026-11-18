@@ -65,6 +65,10 @@ Apply the obvious ones as you go, using the baseline rules in `context/STACK.md`
 
 Then the **Build rules** of the stack profile STACK.md names (`references/stacks/<name>.md`), in the slice that creates the thing each rule is about — the function, the policy, the bucket. A project-wide rule the profile lists as Stage 0 (Supabase's default privileges, for one) goes into Stage 0 the first time a feature touches that layer.
 
+**A slice touching the spec's Money and state constraint** applies [`references/money-and-state.md`](references/money-and-state.md): the server decides amounts and states, every transition checks where it starts, late and repeated events do nothing, records that matter outlive deletes. Its test covers the refusals, not just the happy path.
+
+**A slice adding something on the spec's Cost and abuse surface** puts the limit the spec states on it in the same slice, using the project's rate limiter, or standing one up in Stage 0 if there's none.
+
 **A security finding handed back from review starts with its proof** — the test that performs the attack and expects it refused, failing before the fix. `skills/checks/security-audit/references/proofs.md`.
 
 Inline security is not an override. It's the floor, and it doesn't need a spec entry to justify it.

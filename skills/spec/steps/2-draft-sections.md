@@ -28,11 +28,13 @@ Write all of these, in this order.
 
 **Success metric** — how you'll know it worked after it ships. Also the ceiling on what Ship's collateral is allowed to claim. *Asked.*
 
-**Constraints** — five sub-sections:
+**Constraints** — seven sub-sections:
 
 - *Out of scope* — explicit non-goals. The most valuable lines in the file; without them the pipeline helpfully builds three adjacent things nobody asked for. *Drafted.*
 - *Overrides* — where minimum-viable is dangerous. See `steps/3-overrides.md`. *Drafted.*
 - *Security surface* — what this feature touches: new tables, new endpoints, auth changes, user input, file uploads, third-party keys. Not checks, just surface — security-audit reads this. *Derived.*
+- *Money and state* — every record this feature moves between states: each state, who or what moves it to the next (which person, which outside event, which scheduled job), what happens if a move arrives late or twice, and any state where a person has to act — with who gets told. Plus, where money moves: who decides the amount and currency, and which records must outlive the deletion of whatever they point at. In prose, as behaviour. `none` when nothing changes state or moves money — written, not omitted. Most of the Kancha audit's critical findings were holes here, not in access. *Derived from the data model, drafted where the transitions are new.*
+- *Cost and abuse surface* — actions a stranger could repeat to run up a bill or flood someone: messages and notifications sent, emails and texts, AI calls, uploads, sign-ups, public forms, new conversations opened. For each, the limit that makes sense for this product — per user, per hour — as a bar, not a mechanism. `none` when there are none. *Drafted.*
 - *Compliance surface* — the same facts read for a different consequence: new personal data collected, new third-party processors, new cookies or trackers, changed retention, changed data location, anything touching minors or payments. **Empty for most features, and an empty field is a checked box, not a skipped one** — write "none" rather than omitting the field, so a later reader can tell it was considered. Read alongside the jurisdiction in STACK.md, since what counts as consequential depends on it. *Derived.*
 - *Data rules* — what must not be lost, whether migrations must be reversible. *Drafted.*
 - *Effort ceiling* — the only legitimate mid-run halt. Filled from the plan's slice estimate once Plan runs; leave it stated as "to be set by Plan" in the approved spec. *Drafted from the plan's estimate.*

@@ -23,11 +23,13 @@ Read the whole diff at once. That is the point of running here rather than per s
 
 A scanner would catch the patterns that are already conventions — a concatenated query, a route missing its auth wrapper — and stay silent on the three things this check exists for. Reachability, a tenant filter absent from one query among twenty, a serialiser that accumulated a field over four slices: none of those is a property of a line. They're properties of how the whole diff fits together, which is why they survive per-slice review in the first place.
 
-A clean scan on those would read as clearance, and that is worse than no scan. The one mechanical part — known advisories on new dependencies — is what the ecosystem's own audit tooling is for; it doesn't need a framework script.
+A clean scan on those would read as clearance, and that is worse than no scan. The mechanical parts are what the ecosystem's own tools are for — known advisories on new dependencies, and the platform's own security linter (below). Neither needs a framework script.
+
+The Kancha audit is why both exist here. It found 7 critical holes in a project with row level security on almost every table, and the platform's linter had been reporting the root cause on production all along. Nobody was running it.
 
 ## Inputs
 
-Start from **SPEC.md's security surface** — new tables, new endpoints, auth changes, user input, file uploads, third-party keys. It names the surface; this check decides what that surface implies.
+Start from **SPEC.md's security surface** — new tables, new endpoints, auth changes, user input, file uploads, third-party keys. It names the surface; this check decides what that surface implies. Then its **Money and state** and **Cost and abuse** constraints: the first is walked transition by transition (below), the second checked limit by limit.
 
 Then `context/STACK.md` for the project's baseline rules — the stack's own conventions decide what "correct" looks like here, and a finding that ignores them is noise.
 
@@ -49,7 +51,31 @@ The surface is a starting point, not a boundary. A diff that touches something t
 
 **Uploads,** where the feature has them: type and size enforced server-side, stored outside the web root or behind a signed URL, filenames never trusted.
 
+**Ownership on every identifier.** Each id the client sends — in a path, a body, a function argument — has a check that the caller may act on that record. A function that takes a user id and uses it instead of the caller's is the most common way one user reads another's data.
+
+**Money and state, walked.** For each transition in the spec's Money and state constraint: who can trigger it, from which starting state, and what the code does when the move arrives from the wrong state, arrives twice, or arrives after a later one. Who decides each amount. Whether a delete anywhere can erase a record the spec says must last. Against `skills/build/references/money-and-state.md`, which is what the builder was meant to apply.
+
+**Webhooks and jobs.** Signature verified before any side effect; repeats ignored; the record's state checked; nothing reachable with only the public key.
+
+**Elevated keys.** Every use of a service, admin or secret key in the diff: what checks the caller before it, and that it never reaches client code.
+
+**Cost and abuse.** Every action on the spec's Cost and abuse surface has its limit, enforced on the server. An action a signed-out visitor can repeat without one is `high` when it costs money or reaches another person.
+
+**Live channels.** What each subscription the diff adds sends, field by field, to whom — signed-out listeners included.
+
+**CORS and headers.** Allowed origins the diff adds or widens, credentials with wildcards, removed security headers.
+
+**Account flows,** when auth is touched: whether sign-in and reset reveal which emails exist, whether reset links expire and work once, whether changing a password ends other sessions.
+
+**Logs.** Personal data, tokens or full request bodies written to logs or analytics by the diff.
+
 **Dependencies** the diff introduces: currently maintained, no known critical advisories.
+
+## Linter
+
+When the stack profile names one, run its **Linter** against the local database with the feature's migrations applied, and against the base branch for comparison. Every warning on something the diff created or changed is this feature's: fix it, or explain it in the report (a function deliberately open to signed-out visitors, say so and why). Warnings that were already there are reported as a count with a pointer to the baseline, not as this feature's findings.
+
+A linter that can't run locally is a setup failure, not a clean result — report it as such.
 
 ## Proofs
 
