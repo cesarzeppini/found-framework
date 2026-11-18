@@ -19,7 +19,7 @@ Read the whole diff at once. That is the point of running here rather than per s
 
 ## Why there's no script
 
-**Judgment-only, deliberately.** There is no detector here, and one should not be added.
+**Judgment-only, deliberately.** There is no detector here, and one should not be added. What this check leaves behind instead is a **proof** per serious finding — see below. A proof isn't a detector: it tests one named hole, written after a human-grade judgment found it.
 
 A scanner would catch the patterns that are already conventions — a concatenated query, a route missing its auth wrapper — and stay silent on the three things this check exists for. Reachability, a tenant filter absent from one query among twenty, a serialiser that accumulated a field over four slices: none of those is a property of a line. They're properties of how the whole diff fits together, which is why they survive per-slice review in the first place.
 
@@ -30,6 +30,8 @@ A clean scan on those would read as clearance, and that is worse than no scan. T
 Start from **SPEC.md's security surface** — new tables, new endpoints, auth changes, user input, file uploads, third-party keys. It names the surface; this check decides what that surface implies.
 
 Then `context/STACK.md` for the project's baseline rules — the stack's own conventions decide what "correct" looks like here, and a finding that ignores them is noise.
+
+Then the **stack profile** STACK.md names (`references/stacks/<name>.md`): its **Audit checks** section adds to the list below, and its build rules are what the builder was meant to apply — a missed one is a finding. No `stack-profile:` key is an unmet assumption: stop and ask for it to be recorded, `none` included.
 
 The surface is a starting point, not a boundary. A diff that touches something the spec didn't list is itself worth reporting: it means the spec's surface was wrong, and that's a spec-quality signal.
 
@@ -48,6 +50,12 @@ The surface is a starting point, not a boundary. A diff that touches something t
 **Uploads,** where the feature has them: type and size enforced server-side, stored outside the web root or behind a signed URL, filenames never trusted.
 
 **Dependencies** the diff introduces: currently maintained, no known critical advisories.
+
+## Proofs
+
+Every `high` finding gets a proof: a test that performs the attack and expects it refused, failing while the hole is open. The proof is written with the fix, not by the audit, so write the finding so a proof can be built from it alone — **who acts** (signed out, stranger, other party), **what they send**, **what happens now**, **what should happen**. Whoever fixes it — build on a hand-back, or this check fixing a medium in place — starts with the proof. `references/proofs.md` has the shape and the local-only guard.
+
+A finding that's only been read, not run, says so: `read` or `proven` beside its severity. A proof that passes before any fix withdraws the finding.
 
 ## Severity and blocking
 
@@ -71,18 +79,22 @@ Rate on what the finding lets someone actually do in this system — RULES.md sa
 
 **Report decisions, not activity** (RULES.md): findings and what you changed, not the surface you walked through to get there. One result for the check, including when it's clean — on a stack where most features find nothing, a silent audit and an absent one look identical.
 
+Every finding carries an id — area prefix and number, from `references/finding-ids.md` at the repo root — unique within this feature's report. The proof, the fix commit and the closing status line all use it.
+
 ```text
 security-audit
 Blocking (1)
-  high    src/api/invites.ts:34  invite lookup by id has no tenant filter;
-                                 any signed-in user can read any invite
+  A1  high    proven  src/api/invites.ts:34  invite lookup by id has no tenant filter
+                                             who: any signed-in user · sends: another
+                                             org's invite id · now: invite returned ·
+                                             should: not found
 Fixed (2)
-  medium  src/api/invites.ts:12  email validated at the boundary
-  medium  supabase/policies.sql  invites RLS policy always evaluated true,
-                                 now owner-scoped
+  I1  medium  read    src/api/invites.ts:12  email validated at the boundary
+  A2  medium  proven  supabase/policies.sql  invites RLS policy always evaluated true,
+                                             now owner-scoped · proof: security/invites/A2
 Parked (1)
-  low     src/lib/log.ts:8       invite payload logged in full, includes email —
-                                 propose redacting; check nothing parses the log
+  P1  low     read    src/lib/log.ts:8       invite payload logged in full, includes email —
+                                             propose redacting; check nothing parses the log
 Surface drift (1)
   spec listed no file uploads; the diff adds avatar upload in slice 5
 ```

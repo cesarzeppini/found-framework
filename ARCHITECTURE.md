@@ -34,6 +34,12 @@ found/
                           file in this repo — the two loads, progressive
                           disclosure, leading words, no-op pruning. Consulted
                           whenever a skill is hand-edited or regenerated.
+    finding-ids.md        area prefixes and rules for finding ids, shared by
+                          security-audit and readiness
+    stacks/               one profile per platform — what it leaves open by
+                          default and how to close it. Chosen by STACK.md's
+                          stack-profile key.
+      supabase.md
   skills/                canonical, harness-neutral
     run/                 orchestrator: chains plan → build → review → ship after spec approval
     visualize/           vendored from display-dev/visualize — branded HTML artifacts
@@ -337,6 +343,16 @@ Exceptions are the overrides listed in SPEC.md. Anything not listed there is min
 
 Not everything waits for the audit. RLS on a new table is cheap during the slice that creates it and expensive to retrofit once data and code depend on it. The builder applies the obvious ones as it goes — RLS on tables it creates, parameterised queries, auth on new routes — using the baseline rules in STACK.md. The end-of-feature audit is the net, not the only line.
 
+**Stack profiles.** "RLS on" turned out not to be enough. The Kancha audit (November 2026, a Supabase marketplace) found 7 critical holes on a project with RLS on 14 of 15 tables: Supabase's default grants opened every new function to anonymous visitors, owner-rights functions took a user id as a parameter, and update policies covered every column. None of that is visible from the general rule; all of it is specific to the platform. So platform rules live in `references/stacks/<name>.md`, one per platform, selected by `stack-profile:` in STACK.md. The general rules in STACK.md say *what* must be true; the profile says how that goes wrong on this platform.
+
+Conventions the readers depend on:
+
+- **Five fixed sections** — Build rules, Audit checks, Linter, Proofs on this stack, Settings outside the repository — under exactly those headings, so build, security-audit, proofs and readiness each read only their part.
+- **Every rule traces to a real finding**, named beside it. A rule nobody can trace gets cut at the next edit; a profile is evidence, not a wishlist.
+- **`stack-profile: none` is a recorded decision.** An absent key is an unmet assumption and stops security-audit.
+- **Project-wide rules go to Stage 0.** A profile rule that applies once per project (closing Supabase's default privileges) is done in Stage 0 of the first feature that touches that layer.
+- **The project's own baseline wins** where it and the profile disagree, and the disagreement is reported.
+
 ---
 
 ### 4 — Review
@@ -473,7 +489,7 @@ Each check follows the same shape: a deterministic script for what machines catc
 
 A detector with non-trivial logic keeps tests beside it (`<name>.test.mjs`, run with `node --test`), and every test corresponds to a bug that check actually shipped or a rule it depends on.
 
-Exceptions, deliberate: `security-audit`, `compliance`, `code-quality` and `design-quality` are judgment-only, with no script. A detector for these would produce confident false negatives on exactly the cases they exist to catch — the free-text field that collects personal data without being named for it, the duplicated logic shape a line-based scanner can't recognise as duplicated. The one narrow exception is compliance's dependency signal: new packages and new third-party network calls are reliably detectable and map straight to "new processor" and "new tracker," so a script flags those and feeds the judgment layer. It never decides.
+Exceptions, deliberate: `security-audit`, `compliance`, `code-quality` and `design-quality` are judgment-only, with no script. (security-audit does leave tests behind — proofs, below — but each one tests a single named hole after judgment found it. That's the opposite of a detector.) A detector for these would produce confident false negatives on exactly the cases they exist to catch — the free-text field that collects personal data without being named for it, the duplicated logic shape a line-based scanner can't recognise as duplicated. The one narrow exception is compliance's dependency signal: new packages and new third-party network calls are reliably detectable and map straight to "new processor" and "new tracker," so a script flags those and feeds the judgment layer. It never decides.
 
 ### Severity and retry thresholds
 
@@ -483,6 +499,16 @@ Standing defaults, so they don't get reinvented per skill:
 - **Severity is rated against COMPANY.md**, not in the abstract. What's critical for a product with payments and 40,000 users isn't critical for an internal tool with four.
 - **Bounded retries:** three fix attempts on a blocking finding. After that the run ends into the report with the finding named — it never loops and never waits.
 - **Exit codes:** scripts exit 1 for real findings and 2 for a missing harness (which is a Stage 0 job, not a failure of the work). A run must be able to tell setup failure from a genuine hit.
+
+### security-audit: proofs and finding ids
+
+A judgment-only audit leaves nothing behind: once a hole is fixed, nothing stops it coming back. The Kancha audit showed the alternative. Every finding had a script that performed the attack, the scripts went into CI, and a finding was closed when its script stopped succeeding. That is now how Found closes serious security findings.
+
+- **Every `high` finding gets a proof.** A `medium` gets one when a single request can show it. A proof is an ordinary test in the project's suite, under `security/<scope>/<id>-<slug>`. It acts through the boundary an attacker uses, asserts the refusal, then reads the state back.
+- **The audit finds; the fix writes the proof.** The finding is written precisely enough to build the proof from it alone: who acts, what they send, what happens now, what should happen. The fix starts by watching the proof fail. A proof that passes before any fix withdraws the finding.
+- **Findings say `proven` or `read`,** so a reader knows which ones were actually run.
+- **Proofs run against the local stack only.** Each checks its targets (local hosts, test-mode keys) and exits 2 on anything else. That way a misconfiguration looks like a setup failure, not a result. A third-party sandbox whose webhooks reach deployed environments counts as "anything else". At Kancha, one test payment reached both staging and production that way.
+- **Finding ids**: an area prefix plus a number (`references/finding-ids.md`), unique within one report, written with their scope outside it (`invites/A2`). Never reused, never renumbered. Closed by adding a status line (`closed`, `accepted` with reason and date, `withdrawn`) rather than editing the finding. The prefixes are shared with `readiness`, so a baseline audit and a feature review use the same vocabulary.
 
 ### design-system-guard
 

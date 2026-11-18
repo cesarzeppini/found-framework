@@ -63,6 +63,10 @@ Not everything waits for the audit. RLS on a new table is cheap during the slice
 
 Apply the obvious ones as you go, using the baseline rules in `context/STACK.md`: row-level security on tables you create, parameterised queries, auth on new routes, validation on user input at the boundary. The end-of-feature audit is the net, not the only line.
 
+Then the **Build rules** of the stack profile STACK.md names (`references/stacks/<name>.md`), in the slice that creates the thing each rule is about — the function, the policy, the bucket. A project-wide rule the profile lists as Stage 0 (Supabase's default privileges, for one) goes into Stage 0 the first time a feature touches that layer.
+
+**A security finding handed back from review starts with its proof** — the test that performs the attack and expects it refused, failing before the fix. `skills/checks/security-audit/references/proofs.md`.
+
 Inline security is not an override. It's the floor, and it doesn't need a spec entry to justify it.
 
 ## UI slices
