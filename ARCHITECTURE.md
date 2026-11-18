@@ -430,6 +430,8 @@ DISTRIBUTION.md says per project whether outputs ship as branded artifacts or pl
 
 One file per channel, predictable names, plus `manifest.md` listing what was generated and why. Approval is a folder scan, not a hunt. Screenshots in `out/screens/`.
 
+**`out/rollout.md`** lists the steps a person takes to put the feature live, in order: env vars, migrations and what they depend on, third-party settings, what to remove, a final check on production. It's read from the diff, it isn't a channel, and it's written only when there are steps. Its steps go in the final report's Needs you section, so nothing required to go live is missed before deploying.
+
 The gate is here — between out/ and publish, not inside Ship.
 
 #### Legal and compliance

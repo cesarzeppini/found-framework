@@ -62,11 +62,24 @@ out/
   manifest.md          what was generated and why, what was skipped and why
   report.html          the final report
   screens/             screenshots from review
+  rollout.md           steps a person takes to put this live — only when there are any
   legal/               amendment drafts — gated separately, see below
   skill-proposals/     proposed skill changes and LESSONS.md observations
 ```
 
 `manifest.md` lists what was generated and why — including the channels that produced nothing, so a silent omission is distinguishable from a failure.
+
+## Rollout
+
+Not a channel, so it's never switched off. Read the diff for anything that has to happen outside the code before or during the deploy, and write `out/rollout.md` as a numbered list in the order to do them:
+
+- env vars and secrets to set, per environment
+- migrations, and anything that must exist or happen before they run
+- third-party settings: webhooks and the events they need, redirect URLs, dashboard toggles
+- what to remove or turn off: old functions, flags, jobs
+- a last step that checks the feature works on production
+
+Each step names where it's done and what it's for, in one line. When the diff needs nothing beyond a normal deploy, write no file and say so in the manifest.
 
 ## Legal and compliance
 
@@ -119,7 +132,7 @@ Ship's last act writes `out/report.html`: one self-contained file, generated thr
 
 The run skill owns what goes in it and hands it over in five sections; Ship's job is rendering them in that order, because the order is the point. **Decisions, not activity** — see RULES.md.
 
-1. **Needs you** — early termination, blocked items as questions, blocking findings that survived their attempts, and every `@approved` marker added during the run.
+1. **Needs you** — early termination, blocked items as questions, blocking findings that survived their attempts, every `@approved` marker added during the run, and the rollout steps from `out/rollout.md` when it exists.
 2. **Decided without asking** — parked decisions with alternatives, assumptions, anything invented, anything changed in the existing setup, contradictions found, and where a stage would argue with the spec.
 3. **Findings** — check results, severity marked, one line per check including the clean ones.
 4. **Produced** — acceptance criteria met, screenshots inline per route and viewport, collateral linked from the manifest.
