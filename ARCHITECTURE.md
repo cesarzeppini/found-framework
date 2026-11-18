@@ -42,6 +42,7 @@ found/
       supabase.md
   skills/                canonical, harness-neutral
     run/                 orchestrator: chains plan → build → review → ship after spec approval
+    readiness/           project-level audits outside the pipeline — baseline mode first
     visualize/           vendored from display-dev/visualize — branded HTML artifacts
     spec/
     plan/
@@ -98,6 +99,8 @@ And per project repo:
       tasks.md
       wizard-<slug>.sh   only when a Stage 0 task is human-required; disposable
       out/
+    baseline-<date>/     readiness baseline: 00-map.md, one doc per area group,
+                         report.md with the fix order. Kept — it's the record.
   found/                 submodule or copy of the framework repo
   .claude/
     skills -> ../found/skills   symlink
@@ -541,6 +544,30 @@ Severity: breach of a **documented** standard is blocking, per RULES.md's retry 
 Denylist table — banned / why / use instead — plus `scripts/prose-lint.mjs` that fails on hits. Structure taken from Impeccable's STYLE.md, words replaced with ours. Judgment layer on top for register.
 
 ---
+
+## Readiness — project-level audits
+
+The checks read one feature's diff. Some of what makes a project unsafe is in no diff: platform defaults left open before Found arrived, keys unrotated since the first build, backups never restored. `skills/readiness` looks at the whole project. It sits outside the pipeline, because it isn't a feature, and it only runs when asked.
+
+**Baseline mode** is the first mode. It's a one-off full audit for a project coming into Found: inherited, or built in Lovable, Bolt or similar. Its shape is taken from the Kancha audit (November 2026: 13 areas, 90 findings, 61 checks run, every fix stage later built and proven closed), because that audit's output turned straight into a working fix sequence.
+
+1. **Map:** an inventory before any verdict, ending with *To check, by area* and *Not visible from the repository*.
+2. **One scope stop:** intended product rules, known unfinished work, out of scope, areas that don't apply, whether proofs can run. Answers are recorded as dated decisions. This stop is the baseline's own. The pipeline's two-stop rule governs feature runs, and this isn't one. Anything raised later is parked as `pending decision`.
+3. **Fourteen areas,** each with an id prefix (`references/finding-ids.md`) and a checklist built from real findings (`skills/readiness/references/areas.md`). They're independent once the map exists, so they can run in parallel.
+4. **Fix order:** stage 0 holds human-required steps, then root causes before symptoms, then by what each hole lets someone do, then known unfinished work, then platform settings. Each stage is sized for one pipeline run (`spec this: baseline stage 3`). Its "what changes" lines become the spec's behaviour and its proofs become the acceptance criteria. Stages that are only safe together say so on both sides.
+5. **Report:** bottom line in plain sentences, numbers, decisions, critical and high findings, fix order, what holds, not covered, how the audit ran.
+
+Conventions it depends on:
+
+- **Read-only on hosted services.** Platform CLIs may read settings. Nothing is changed, deployed or written outside the local stack and `work/`.
+- **The audit fixes nothing.** A fix made mid-audit hides what was found and skips its own proof.
+- **Baseline proofs are written in expected-to-fail form** with the runner's own mechanism, under `security/baseline/`. That keeps the suite green while holes are open, and makes an accidental fix show up as an unexpected pass. The stage that fixes a finding starts by removing the marker. Runners with no such mechanism keep proofs in `work/baseline-<date>/proofs/` until their stage moves them in.
+- **Every document opens with how far it goes** (read, run, not seen), and every finding says `proven` or `read`.
+- **Four severities** (critical, high, medium, low), rated against COMPANY.md and the recorded decisions. `not built` marks known unfinished work, counted separately so it doesn't bury real holes.
+- **`--status` appends, never edits.** It runs every baseline proof and adds a dated status section to each document (closed, accepted with reason, open with what it's waiting on, found while fixing). A setting outside the repository stays open until a person confirms it.
+- **Output lives in `work/baseline-<date>/`** and is kept. A second baseline over one with open findings is refused in favour of `--status`.
+
+Launch, milestone and scheduled modes are planned for later. They add the project-level settings checklist (statuses: done, accepted, waiting on, needs a paid plan) and the record kept in STACK.md.
 
 ## Skills learn from runs — with a gate
 

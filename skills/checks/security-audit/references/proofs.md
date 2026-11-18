@@ -34,4 +34,10 @@ Proofs attack things, so they run against the local stack and nothing else.
 - **A third-party sandbox can still reach deployed environments.** A test payment in a sandbox fires events to every webhook registered there, including staging's and production's. Proofs that create objects at a third party use a sandbox with no deployed endpoints. If the project has none, park the proof and say why. Don't run it.
 - Proofs create their own data and leave the local database resettable. Never point a proof at shared data to save setup time.
 
+## Baseline proofs
+
+A baseline audit (`skills/readiness`) writes its proofs itself, because it has to run the attack to know the finding is real. It writes them in expected-to-fail form, using the runner's own mechanism, under `security/baseline/`, so the suite stays green while the holes are open. The stage that fixes a finding starts by removing the marker. From then on it's an ordinary proof.
+
+## Where the local stack comes from
+
 The stack profile named in `context/STACK.md` says how the local stack starts and which keys count as test keys there.

@@ -17,7 +17,7 @@ ARCHITECTURE.md's build order has five steps. **Steps 1–2 built this framework
 ## What's here
 
 ```
-skills/     run, spec, plan, build, review, ship + checks/ (7) + vendored visualize
+skills/     run, spec, plan, build, review, ship, readiness + checks/ (7) + vendored visualize
 agents/     11 predefined — 8 channel writers, finish-reviewer, asset-producer, documenter
 scripts/    prose-lint, screenshots, spec-no-code
 templates/  context/ — one template per project context file, + ADR-FORMAT.md

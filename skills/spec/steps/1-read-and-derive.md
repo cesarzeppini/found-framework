@@ -3,6 +3,7 @@
 1. Read `context/` — all of it. COMPANY.md and STACK.md especially: they decide how much the spec has to raise. GLOSSARY.md sets the vocabulary the draft is written in.
 2. Read the codebase for the conventions the feature will inherit — routes, auth patterns, existing empty/loading/error treatments, the data model.
 3. Read `docs/adr/` for decisions already made in the area this feature touches, if the directory exists. A spec that contradicts a standing ADR without saying so is a spec that will surprise whoever wrote it.
+4. **A baseline fix stage** ("spec this: baseline stage 3") starts from that stage in `work/baseline-<date>/report.md`. Its *what changes* lines are the behaviour, its proofs are the acceptance criteria, and its decisions are already made. Draft from them, and only ask about what the stage leaves open.
 
 ## Vocabulary
 

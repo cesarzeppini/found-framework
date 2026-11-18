@@ -1,6 +1,6 @@
 # Finding ids
 
-Every finding from `security-audit`, and from any audit `readiness` runs, carries an **id**: an area prefix and a number, such as `A3` or `M2`. The id is how a finding is named everywhere afterwards: in the report, in the fix's commit, in its proof test, in the status line that closes it.
+Every finding from `security-audit`, and from any audit `readiness` runs (a baseline uses the scope `baseline`), carries an **id**: an area prefix and a number, such as `A3` or `M2`. The id is how a finding is named everywhere afterwards: in the report, in the fix's commit, in its proof test, in the status line that closes it.
 
 ## Prefixes
 
@@ -19,6 +19,7 @@ Every finding from `security-audit`, and from any audit `readiness` runs, carrie
 | F | Failure behaviour | Errors swallowed, unreported, or shown wrongly to the user. |
 | P | Privacy | Personal data exposed, kept, or impossible to delete. |
 | CL | Claims | What the product says that isn't true. |
+| PF | Performance | Missing indexes, unbounded queries, connection limits, payload size. |
 
 A finding that spans two areas takes the prefix of the place it gets fixed. The other area's report refers to it by that id instead of giving it a second one.
 
