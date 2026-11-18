@@ -34,8 +34,10 @@ found/
                           file in this repo — the two loads, progressive
                           disclosure, leading words, no-op pruning. Consulted
                           whenever a skill is hand-edited or regenerated.
+    finding-ids.md        how security findings are named and closed
   skills/                canonical, harness-neutral
     run/                 orchestrator: chains plan → build → review → ship after spec approval
+    readiness-audit/     production readiness, outside the pipeline
     visualize/           vendored from display-dev/visualize — branded HTML artifacts
     spec/
     plan/
@@ -428,6 +430,8 @@ DISTRIBUTION.md says per project whether outputs ship as branded artifacts or pl
 
 One file per channel, predictable names, plus `manifest.md` listing what was generated and why. Approval is a folder scan, not a hunt. Screenshots in `out/screens/`.
 
+**`out/rollout.md`** lists the steps a person takes to put the feature live, in order: env vars, migrations and what they depend on, third-party settings, what to remove, a final check on production. It's read from the diff, it isn't a channel, and it's written only when there are steps. Its steps go in the final report's Needs you section, so nothing required to go live is missed before deploying.
+
 The gate is here — between out/ and publish, not inside Ship.
 
 #### Legal and compliance
@@ -515,6 +519,23 @@ Severity: breach of a **documented** standard is blocking, per RULES.md's retry 
 Denylist table — banned / why / use instead — plus `scripts/prose-lint.mjs` that fails on hits. Structure taken from Impeccable's STYLE.md, words replaced with ours. Judgment layer on top for register.
 
 ---
+
+## Readiness audit
+
+`skills/readiness-audit` checks whether a project is ready for production, outside the pipeline. It's run when asked, and offered once when there are signs of production. **It holds a process, not a rulebook.** A first draft encoded what one audit (Kancha) had found, as stack- and domain-specific rules. That was the wrong layer: those rules fit one project and go stale on the rest. What made that audit work was the method, so the method is what's kept.
+
+- **A fixed starting checklist** (`references/checklist.md`): 15 common items plus 11 from OWASP Top 10:2025 and current launch checklists. Two of them apply only when present (file storage, personal data).
+- **Research and mapping decide the rest.** A best-practices search for this stack, and a map of the codebase, add whatever this project needs. Nothing project-specific is written into the framework.
+- **Ask, never assume.** Ask before mapping, before planning, and before each phase.
+- **Phases gated by "go phase N".** Explain the phase in a few lines, build it, then give a short report of what went well and what didn't.
+- **End with a brief checklist** of what's done and what's open, in `work/readiness-<date>/report.md`, presented in chat.
+- **Features don't undo it.** security-audit checks each diff against the checklist items it touches, and only those. Review's user-story walk also checks that nothing the app shows claims something untrue (advisory).
+
+## Proofs and finding ids
+
+Judgment-only security review leaves nothing behind once a hole is fixed. So every `high` finding gets a **proof**: a test that performs the attack, expects it refused, and stays in the suite (`skills/checks/security-audit/references/proofs.md`). The fix starts by watching it fail. Proofs run against the local stack only and exit 2 on anything else, so a misconfiguration can't look like a result. A third-party sandbox whose webhooks reach deployed environments counts as "anything else". The readiness audit writes its proofs expected-to-fail, so the suite stays green until the fixing phase removes the marker.
+
+Findings carry ids (`references/finding-ids.md`): a prefix the report defines plus a number. They're never reused, and they're closed by adding a status line rather than editing.
 
 ## Skills learn from runs — with a gate
 

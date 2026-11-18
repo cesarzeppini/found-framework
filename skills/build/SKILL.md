@@ -65,6 +65,8 @@ Apply the obvious ones as you go, using the baseline rules in `context/STACK.md`
 
 Inline security is not an override. It's the floor, and it doesn't need a spec entry to justify it.
 
+**A security finding handed back from review starts with its proof**: the test that performs the attack and expects it refused, failing before the fix. See `skills/checks/security-audit/references/proofs.md`.
+
 ## UI slices
 
 Any slice touching UI also runs `skills/checks/design-system-guard` before its gate. Auto-fixes apply inside the slice. Ambiguous cases don't block — they park and surface in the final report next to the screenshots.

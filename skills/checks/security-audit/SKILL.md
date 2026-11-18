@@ -19,11 +19,11 @@ Read the whole diff at once. That is the point of running here rather than per s
 
 ## Why there's no script
 
-**Judgment-only, deliberately.** There is no detector here, and one should not be added.
+**Judgment-only, deliberately.** There is no detector here, and one should not be added. What it leaves behind instead is a **proof** for each serious finding (see below): a test for one named hole, written after judgment found it.
 
 A scanner would catch the patterns that are already conventions — a concatenated query, a route missing its auth wrapper — and stay silent on the three things this check exists for. Reachability, a tenant filter absent from one query among twenty, a serialiser that accumulated a field over four slices: none of those is a property of a line. They're properties of how the whole diff fits together, which is why they survive per-slice review in the first place.
 
-A clean scan on those would read as clearance, and that is worse than no scan. The one mechanical part — known advisories on new dependencies — is what the ecosystem's own audit tooling is for; it doesn't need a framework script.
+A clean scan on those would read as clearance, and that is worse than no scan. The mechanical parts are what the ecosystem's own tools are for: known advisories on new dependencies, and the platform's own security checker if it has one. Run them; they need no framework script.
 
 ## Inputs
 
@@ -49,6 +49,14 @@ The surface is a starting point, not a boundary. A diff that touches something t
 
 **Dependencies** the diff introduces: currently maintained, no known critical advisories.
 
+**The readiness checklist.** Check the diff against the items in `skills/readiness-audit/references/checklist.md` that it touches. A new endpoint touches rate limiting and trusting the client; a new upload touches file storage. Skip the items it doesn't touch. This keeps a feature from undoing what a readiness audit fixed.
+
+## Proofs
+
+Every `high` finding gets a proof: a test that performs the attack and expects it refused, failing while the hole is open. Write the finding so a proof can be built from it alone: **who acts**, **what they send**, **what happens now**, **what should happen**. Whoever fixes it starts with the proof. `references/proofs.md` has the shape and the local-only rule.
+
+Each finding says `proven` or `read`, so the report is clear about which ones were actually run.
+
 ## Severity and blocking
 
 Thresholds and the retry limit come from RULES.md. This check keeps security's conventional three-level scale, which maps onto them as follows:
@@ -59,7 +67,7 @@ Thresholds and the retry limit come from RULES.md. This check keeps security's c
 | medium | Real weakness needing a precondition | Park, per RULES.md. Fix in place if unambiguous. |
 | low | Hardening, defence in depth | Park. Never blocks. |
 
-Report findings in this vocabulary rather than translating them, so a finding stays greppable against the tools and advisories that use it.
+Give each finding an id (`references/finding-ids.md` at the repo root), which its proof and fix reuse. Report findings in this vocabulary rather than translating them, so a finding stays greppable against the tools and advisories that use it.
 
 Rate on what the finding lets someone actually do in this system — RULES.md says severity is rated against COMPANY.md, and this is where that bites hardest. A theoretical issue in an admin-only path used by two people is not high severity.
 

@@ -19,6 +19,8 @@ If review finds something broken, it reports it — the fix goes back through bu
 
 **User-story test.** Does the whole feature work the way a user experiences it, not just the way the unit tests do? Walk the spec's acceptance criteria end to end, in order, as a person would. This catches the feature that passes every slice test and still doesn't work, because nothing ever exercised the seams between slices.
 
+While walking it, also check the reverse: nothing the app shows claims something untrue. That covers a badge nothing grants, a promise in the copy the feature doesn't keep, or a setting that does nothing. Advisory.
+
 **Screenshots.** Every route in the spec's affected-screens list, mobile and desktop, via `scripts/screenshots.mjs`. This is the only real check on whether the interface is any good — taste can't be linted, so a human looks. Batched at feature level, never per slice, so approval is one session rather than fifteen interruptions. Skipped with `run`'s `--no-screenshots` flag — the images aren't written, but `checks/a11y` still runs on the same browser pass (`--no-images`, not a skipped pass).
 
 **`checks/a11y`** — over the same browser run. Blocking.

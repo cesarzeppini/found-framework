@@ -77,6 +77,7 @@ Ship writes `out/report.html`, but the run owns what goes in it.
 - if the run ended early: which stage, why, what was attempted
 - irreversible or genuinely blocked items, as questions
 - blocking findings that survived their fix attempts
+- **the rollout steps** from `out/rollout.md`, in full, when it exists, so nothing needed to go live is missed before deploying
 - **every `@approved` marker added during the run** — the file, the component, and who asked for it. Listed even when a human did ask, because a report filed only when the agent judges it necessary is a report the agent can decide not to file. Unconditional listing is what makes an unrequested marker visible.
 
 **2 — Decided without asking.** The price of not being interrupted:

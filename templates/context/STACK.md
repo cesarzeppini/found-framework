@@ -24,6 +24,8 @@ How authentication works, where sessions live, how authorisation is expressed. W
 
 Test runner, how the suite is invoked, where tests live, what "the full suite" means. Browser/screenshot harness, if configured.
 
+How the local stack is started and reset, for proofs (the security tests that attack it, local only — `skills/checks/security-audit/references/proofs.md`).
+
 If any of these is missing, standing it up is a Stage 0 task — the slice gates have nothing to run otherwise.
 
 ## Approved components `[ask]`
