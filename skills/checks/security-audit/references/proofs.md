@@ -36,7 +36,7 @@ Proofs attack things, so they run against the local stack and nothing else.
 
 ## Proofs written by an audit
 
-`readiness-audit` writes proofs before anything is fixed, so it writes them in expected-to-fail form using the test runner's own mechanism. That keeps the suite green while the holes are open. The phase that fixes a finding starts by removing the marker.
+`pre-launch` writes its proofs itself, before anything is fixed, because it has to run the attack to know a finding is real. It keeps them in its own work folder and prints `PROVEN` or `NOT PROVEN` (`skills/pre-launch/references/proofs.md`). The package that fixes a finding starts by moving its proof into the suite and watching it fail.
 
 ## Where the local stack comes from
 

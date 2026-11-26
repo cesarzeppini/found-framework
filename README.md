@@ -17,7 +17,7 @@ ARCHITECTURE.md's build order has five steps. **Steps 1–2 built this framework
 ## What's here
 
 ```
-skills/     run, spec, plan, build, review, ship, readiness-audit + checks/ (7) + vendored visualize
+skills/     run, spec, plan, build, review, ship, pre-launch + checks/ (7) + vendored visualize
 agents/     11 predefined — 8 channel writers, finish-reviewer, asset-producer, documenter
 scripts/    prose-lint, screenshots, spec-no-code
 templates/  context/ — one template per project context file, + ADR-FORMAT.md
@@ -110,6 +110,18 @@ Three things are approved **individually**, not by approving the run:
 - **`context/` changes** proposed by the documenter
 
 Nothing in `out/` is published by the pipeline. Publishing is yours.
+
+## Before launch
+
+Outside the pipeline, once per product, before real users or real money:
+
+> Run a pre-launch audit on this project.
+
+`skills/pre-launch` checks the whole product against 25 areas (access, money, secrets, the build process, integrations, privacy, legal, maintainability and more). It asks which tags apply (payments, marketplace, user content, realtime, uploads, AI features, which services) and skips the rest. Then it maps the product and works through eight groups of areas, waiting for your "go" after each.
+
+It reads and proves, and fixes nothing. Every finding gets a proof that prints `PROVEN` or `NOT PROVEN`, which becomes the acceptance test for the fix. You get back `work/pre-launch-<date>/report.md`: findings ranked by severity, fix packages to run as normal features, and a list of dashboard settings only the account owners can change. After each package merges, `pre-launch --status` updates the record.
+
+The pipeline offers it once when it sees signs of production. It never starts on its own.
 
 ## Updating the framework
 

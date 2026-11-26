@@ -49,7 +49,7 @@ The surface is a starting point, not a boundary. A diff that touches something t
 
 **Dependencies** the diff introduces: currently maintained, no known critical advisories.
 
-**The readiness checklist.** Check the diff against the items in `skills/readiness-audit/references/checklist.md` that it touches. A new endpoint touches rate limiting and trusting the client; a new upload touches file storage. Skip the items it doesn't touch. This keeps a feature from undoing what a readiness audit fixed.
+**The pre-launch areas.** Check the diff against the items in `skills/pre-launch/references/areas/` that it touches, among the tags the product has. A new endpoint touches access and rate limiting; a new upload touches uploads and storage; a new outside service touches integrations. Skip the items it doesn't touch. This keeps a feature from undoing what a pre-launch audit's fixes closed.
 
 ## Proofs
 
