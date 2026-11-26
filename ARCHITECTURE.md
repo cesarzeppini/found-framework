@@ -37,7 +37,7 @@ found/
     finding-ids.md        how security findings are named and closed
   skills/                canonical, harness-neutral
     run/                 orchestrator: chains plan → build → review → ship after spec approval
-    readiness-audit/     production readiness, outside the pipeline
+    pre-launch/          whole-product audit before launch, outside the pipeline
     visualize/           vendored from display-dev/visualize — branded HTML artifacts
     spec/
     plan/
@@ -520,20 +520,21 @@ Denylist table — banned / why / use instead — plus `scripts/prose-lint.mjs` 
 
 ---
 
-## Readiness audit
+## Pre-launch audit
 
-`skills/readiness-audit` checks whether a project is ready for production, outside the pipeline. It's run when asked, and offered once when there are signs of production. **It holds a process, not a rulebook.** A first draft encoded what one audit (Kancha) had found, as stack- and domain-specific rules. That was the wrong layer: those rules fit one project and go stale on the rest. What made that audit work was the method, so the method is what's kept.
+`skills/pre-launch` audits a whole product before launch, outside the pipeline. It's run when asked, and offered once when there are signs of production. It replaced `readiness-audit` in November 2026, keeping the best of three versions: the Kancha baseline audit's method (map, one stop for intended rules, area documents with what holds, fix order, status), readiness-audit's ask-first habit and research step, and a generic pre-launch checklist written after Kancha.
 
-- **A fixed starting checklist** (`references/checklist.md`): 15 common items plus 11 from OWASP Top 10:2025 and current launch checklists. Two of them apply only when present (file storage, personal data).
-- **Research and mapping decide the rest.** A best-practices search for this stack, and a map of the codebase, add whatever this project needs. Nothing project-specific is written into the framework.
-- **Ask, never assume.** Ask before mapping, before planning, and before each phase.
-- **Phases gated by "go phase N".** Explain the phase in a few lines, build it, then give a short report of what went well and what didn't.
-- **End with a brief checklist** of what's done and what's open, in `work/readiness-<date>/report.md`, presented in chat.
-- **Features don't undo it.** security-audit checks each diff against the checklist items it touches, and only those. Review's user-story walk also checks that nothing the app shows claims something untrue (advisory).
+- **A tagged checklist, not project rules.** 25 areas, one reference file each, every item tagged (`[all]`, `[payments]`, `[marketplace]`, `[UGC]`, `[realtime]`, `[uploads]`, `[AI]`, `[web]`, and service tags such as `[Supabase]` or `[Stripe]` whose idea applies to equivalents). Step 1 marks which tags apply and the rest are skipped with a reason. The earlier objection to a rulebook was to rules that fit one project; a checklist filtered by what the product is stays general. Research at the start of each audit adds what has changed since, dated.
+- **Read and prove, never fix.** Every finding gets a proof that prints `PROVEN` (exit 1) or `NOT PROVEN` (exit 0), exit 2 on a refused target. Proofs live in `work/pre-launch-<date>/proofs/`; the audit writes nothing into the project's code. A fix package's first move is putting its proofs in the suite, where they become its acceptance test and then run in CI. Attacks stay on the local stack; the one exception is reads anyone on the internet can make (headers, TLS, DNS, public pages signed out), which may target deployed hosts, because a laptop has no domain, DNS or proxy to prove those against.
+- **Gated in eight groups,** worst damage first, with a "go" between each. Ask before mapping, stop once after the map for intended rules and product decisions, then one gate per group.
+- **Four severities** (critical, high, medium, low) rated against stage and scale, plus `not built` for planned work, counted apart.
+- **The report** ranks findings by severity with proof and fix, groups fixes into packages, keeps product decisions apart from bugs, and lists the dashboard settings only account owners can change (service, page, setting, finding).
+- **Reuses the review checks** rather than repeating them: security-audit's method, compliance's document mapping, code-quality's `/code-review` and guard-the-bar moves, and a11y for accessibility, which has no area yet (nor do SEO and native mobile).
+- **Features don't undo it.** security-audit checks each diff against the area items it touches, among the product's tags. Review's user-story walk also checks that nothing the app shows claims something untrue (advisory).
 
 ## Proofs and finding ids
 
-Judgment-only security review leaves nothing behind once a hole is fixed. So every `high` finding gets a **proof**: a test that performs the attack, expects it refused, and stays in the suite (`skills/checks/security-audit/references/proofs.md`). The fix starts by watching it fail. Proofs run against the local stack only and exit 2 on anything else, so a misconfiguration can't look like a result. A third-party sandbox whose webhooks reach deployed environments counts as "anything else". The readiness audit writes its proofs expected-to-fail, so the suite stays green until the fixing phase removes the marker.
+Judgment-only security review leaves nothing behind once a hole is fixed. So every `high` finding gets a **proof**: a test that performs the attack, expects it refused, and stays in the suite (`skills/checks/security-audit/references/proofs.md`). The fix starts by watching it fail. Proofs run against the local stack only and exit 2 on anything else, so a misconfiguration can't look like a result. The pre-launch audit's public reads are the one exception (see Pre-launch audit). A third-party sandbox whose webhooks reach deployed environments counts as "anything else". The pre-launch audit keeps its proofs in its own work folder, so the suite stays green until a fix package moves them in.
 
 Findings carry ids (`references/finding-ids.md`): a prefix the report defines plus a number. They're never reused, and they're closed by adding a status line rather than editing.
 
